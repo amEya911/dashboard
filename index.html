@@ -1,0 +1,3031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CRE Command Center — Edelweiss Alternatives</title>
+  <meta name="description" content="24/7 Commercial Real Estate Command Center Dashboard for Building Management, Facility Management, CAFM, and Asset Portfolio monitoring across 5 assets.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <style>
+    /* ════════════════════════════════════════════════════════════════
+       DESIGN TOKENS
+    ════════════════════════════════════════════════════════════════ */
+    :root {
+      --c-primary:        #1D4ED8;
+      --c-primary-lt:     #3B82F6;
+      --c-primary-bg:     #EFF6FF;
+      --c-primary-txt:    #1E40AF;
+      --c-success:        #059669;
+      --c-success-bg:     #ECFDF5;
+      --c-warning:        #D97706;
+      --c-warning-bg:     #FFFBEB;
+      --c-danger:         #DC2626;
+      --c-danger-bg:      #FEF2F2;
+      --c-idle:           #6B7280;
+      --c-idle-bg:        #F3F4F6;
+      --c-purple:         #7C3AED;
+      --c-purple-bg:      #F5F3FF;
+      --c-teal:           #0D9488;
+      --c-teal-bg:        #F0FDFA;
+      --c-txt:            #0F172A;
+      --c-txt2:           #475569;
+      --c-txt3:           #94A3B8;
+      --c-bg:             #F1F5F9;
+      --c-card:           #FFFFFF;
+      --c-border:         #E2E8F0;
+      --c-border-lt:      #F1F5F9;
+      --shadow-sm:        0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:        0 4px 12px rgba(0,0,0,0.07);
+      --shadow-lg:        0 10px 30px rgba(0,0,0,0.10);
+      --r-sm:  5px;
+      --r-md:  8px;
+      --r-lg: 12px;
+      --header-h: 56px;
+      --sidebar-w: 220px;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       RESET & BASE
+    ════════════════════════════════════════════════════════════════ */
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    html, body {
+      height: 100vh; width: 100vw;
+      overflow: hidden;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      font-size: 13px;
+      color: var(--c-txt);
+      background: var(--c-bg);
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 2px; }
+    * { scrollbar-width: thin; scrollbar-color: var(--c-border) transparent; }
+
+    /* ════════════════════════════════════════════════════════════════
+       HEADER
+    ════════════════════════════════════════════════════════════════ */
+    .header {
+      position: fixed; top:0; left:0; right:0;
+      height: var(--header-h);
+      background: var(--c-card);
+      border-bottom: 1px solid var(--c-border);
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      z-index: 200;
+      box-shadow: var(--shadow-sm);
+    }
+    .header-left { display:flex; align-items:center; gap:10px; }
+    .brand-icon {
+      width: 34px; height: 34px;
+      background: var(--c-primary);
+      border-radius: var(--r-md);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .header-titles { display:flex; flex-direction:column; }
+    .header-title { font-size:14px; font-weight:700; letter-spacing:-0.01em; color:var(--c-txt); }
+    .header-sub { font-size:10px; color:var(--c-txt2); font-weight:500; }
+
+    .header-center {
+      position: absolute; left:50%; transform:translateX(-50%);
+      display: flex; align-items: center; gap:10px;
+    }
+    .live-clock { font-size:20px; font-weight:700; letter-spacing:-0.03em; font-variant-numeric:tabular-nums; color:var(--c-txt); }
+    .live-date { font-size:11px; color:var(--c-txt2); border-left:1px solid var(--c-border); padding-left:10px; }
+
+    .header-right { display:flex; align-items:center; gap:14px; }
+    .sys-status-dot { width:8px; height:8px; border-radius:50%; background:var(--c-success); box-shadow:0 0 0 3px rgba(5,150,105,.18); animation:heartbeat 3s ease infinite; }
+    @keyframes heartbeat { 0%,100%{box-shadow:0 0 0 3px rgba(5,150,105,.18)} 50%{box-shadow:0 0 0 5px rgba(5,150,105,.08)} }
+    .sys-status-label { font-size:11px; font-weight:600; color:var(--c-success); }
+    .header-tag { font-size:10px; font-weight:600; color:var(--c-txt2); background:var(--c-border-lt); padding:3px 8px; border-radius:100px; border:1px solid var(--c-border); }
+
+    /* ════════════════════════════════════════════════════════════════
+       SIDEBAR
+    ════════════════════════════════════════════════════════════════ */
+    .sidebar {
+      position: fixed; top:var(--header-h); left:0; bottom:0;
+      width: var(--sidebar-w);
+      background: var(--c-card);
+      border-right: 1px solid var(--c-border);
+      display: flex; flex-direction:column;
+      z-index: 100;
+    }
+    .sidebar-label { font-size:9px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--c-txt3); padding:12px 14px 4px; }
+    .nav-item {
+      display: flex; align-items:center; gap:8px;
+      padding: 7px 14px;
+      font-size:12px; font-weight:500; color:var(--c-txt2);
+      border-left: 3px solid transparent;
+      cursor: pointer; user-select:none;
+      transition: all .15s ease;
+      text-decoration: none;
+    }
+    .nav-item:hover { color:var(--c-txt); background:var(--c-border-lt); }
+    .nav-item.active { color:var(--c-primary-txt); background:var(--c-primary-bg); border-left-color:var(--c-primary); font-weight:600; }
+    .nav-item svg { flex-shrink:0; opacity:.65; }
+    .nav-item.active svg { opacity:1; }
+    .nav-dot { width:6px; height:6px; border-radius:50%; margin-left:auto; flex-shrink:0; }
+    .nav-divider { height:1px; background:var(--c-border-lt); margin:6px 14px; }
+    .sidebar-footer { margin-top:auto; padding:10px 14px; border-top:1px solid var(--c-border-lt); }
+    .sf-row { display:flex; align-items:center; justify-content:space-between; font-size:10px; color:var(--c-txt3); }
+    .sf-val { font-weight:600; color:var(--c-txt2); }
+
+    /* Tree Navigation */
+    .tree-nav { padding:4px 0; overflow-y:auto; flex:1; }
+    .tree-group { }
+    .tree-toggle {
+      display:flex; align-items:center; gap:6px;
+      padding:5px 14px; font-size:11px; font-weight:600; color:var(--c-txt2);
+      cursor:pointer; user-select:none; transition:background .12s;
+    }
+    .tree-toggle:hover { background:var(--c-border-lt); }
+    .tree-toggle .tree-arrow { font-size:8px; transition:transform .2s; color:var(--c-txt3); width:10px; }
+    .tree-toggle.open .tree-arrow { transform:rotate(90deg); }
+    .tree-toggle .tree-count { font-size:9px; color:var(--c-txt3); font-weight:500; margin-left:auto; }
+    .tree-children { display:none; }
+    .tree-toggle.open + .tree-children { display:block; }
+    .tree-item {
+      display:flex; align-items:center; gap:6px;
+      padding:4px 14px 4px 28px; font-size:11px; font-weight:500; color:var(--c-txt2);
+      cursor:pointer; user-select:none; transition:all .12s;
+      border-left:2px solid transparent;
+    }
+    .tree-item:hover { background:var(--c-border-lt); color:var(--c-txt); }
+    .tree-item.active { background:var(--c-primary-bg); color:var(--c-primary-txt); border-left-color:var(--c-primary); font-weight:600; }
+    .tree-item.city-item { padding-left:36px; font-size:10px; color:var(--c-txt3); font-weight:600; text-transform:uppercase; letter-spacing:.04em; cursor:default; }
+    .tree-item.city-item:hover { background:transparent; color:var(--c-txt3); }
+    .tree-item.asset-item { padding-left:44px; }
+    .tree-item.asset-item .tree-dot { width:5px; height:5px; border-radius:50%; background:var(--c-success); flex-shrink:0; }
+    .tree-item.tentative-item { border-left-style:dashed; border-left-color:var(--c-purple); }
+
+    /* ════════════════════════════════════════════════════════════════
+       MAIN LAYOUT
+    ════════════════════════════════════════════════════════════════ */
+    .main {
+      margin-left: var(--sidebar-w);
+      margin-top: var(--header-h);
+      height: calc(100vh - var(--header-h));
+      width: calc(100vw - var(--sidebar-w));
+      overflow: hidden;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       SECTIONS
+    ════════════════════════════════════════════════════════════════ */
+    .section {
+      display: none;
+      height: 100%;
+      width: 100%;
+      padding: 12px;
+      box-sizing: border-box;
+      gap: 10px;
+    }
+    .section.active {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      animation: fadeIn .2s ease-out;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(3px)} to{opacity:1;transform:translateY(0)} }
+
+    #sec-bms.active    { grid-template-rows: 80px 1fr 1fr; }
+    #sec-bms-cctv.active { grid-template-rows: 1fr; }
+    #sec-fms.active    { grid-template-rows: 80px 1fr 1fr; }
+    #sec-cafm.active   { grid-template-rows: 80px 1fr 1fr; }
+    #sec-portfolio.active { grid-template-rows: 80px 1.1fr 1.5fr 1.4fr; }
+    #sec-portfolio.active.single-view { grid-template-rows: 80px 80px 1.8fr 1.4fr; }
+
+    .col-2  { grid-column: span 2; }
+    .col-3  { grid-column: span 3; }
+    .col-4  { grid-column: span 4; }
+    .col-5  { grid-column: span 5; }
+    .col-6  { grid-column: span 6; }
+    .col-7  { grid-column: span 7; }
+    .col-8  { grid-column: span 8; }
+    .col-9  { grid-column: span 9; }
+    .col-12 { grid-column: span 12; }
+
+    /* ════════════════════════════════════════════════════════════════
+       KPI STRIP
+    ════════════════════════════════════════════════════════════════ */
+    .kpi-strip { grid-column:span 12; display:flex; gap:10px; }
+    .kpi {
+      flex: 1;
+      background: var(--c-card);
+      border: 1px solid var(--c-border);
+      border-radius: var(--r-md);
+      padding: 10px 14px;
+      display: flex; align-items:center; gap:10px;
+      box-shadow: var(--shadow-sm);
+      min-width:0;
+      cursor:pointer;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .kpi:hover { border-color:var(--c-primary-lt); box-shadow:var(--shadow-md); }
+    .kpi-ico {
+      width:34px; height:34px; border-radius:50%;
+      background:var(--c-primary-bg); color:var(--c-primary);
+      display:flex; align-items:center; justify-content:center;
+      flex-shrink:0; font-size:15px;
+    }
+    .kpi-ico.g { background:var(--c-success-bg); color:var(--c-success); }
+    .kpi-ico.w { background:var(--c-warning-bg); color:var(--c-warning); }
+    .kpi-ico.r { background:var(--c-danger-bg); color:var(--c-danger); }
+    .kpi-ico.p { background:var(--c-purple-bg); color:var(--c-purple); }
+    .kpi-ico.t { background:var(--c-teal-bg); color:var(--c-teal); }
+    .kpi-body { display:flex; flex-direction:column; min-width:0; }
+    .kpi-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--c-txt2); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .kpi-val { font-size:19px; font-weight:700; color:var(--c-txt); line-height:1.2; font-variant-numeric:tabular-nums; }
+    .kpi-sub { font-size:9px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .kpi-sub.ok  { color:var(--c-success); }
+    .kpi-sub.warn{ color:var(--c-warning); }
+    .kpi-sub.bad { color:var(--c-danger); }
+    .kpi-sub.muted { color:var(--c-txt3); }
+
+    /* ════════════════════════════════════════════════════════════════
+       CARD
+    ════════════════════════════════════════════════════════════════ */
+    .card {
+      background:var(--c-card);
+      border:1px solid var(--c-border);
+      border-radius:var(--r-md);
+      box-shadow:var(--shadow-sm);
+      display:flex; flex-direction:column;
+      overflow:hidden;
+      height:100%;
+      min-height:0;
+    }
+    .card-hdr {
+      padding:9px 14px 0;
+      display:flex; align-items:center; justify-content:space-between;
+      flex-shrink:0;
+    }
+    .card-title { font-size:11px; font-weight:700; color:var(--c-txt); letter-spacing:.01em; }
+    .card-badge { font-size:9px; font-weight:600; padding:2px 6px; border-radius:100px; }
+    .card-body {
+      flex:1; min-height:0;
+      padding:6px 12px 10px;
+      display:flex; align-items:center; justify-content:center;
+      position:relative;
+      overflow:hidden;
+    }
+    .card-body canvas { display:block; }
+    .card-body.pad-none { padding:0; }
+    .card-body.scroll { overflow-y:auto; align-items:flex-start; }
+    .card-body.col { flex-direction:column; justify-content:flex-start; align-items:stretch; gap:6px; }
+    .card-ts { font-size:9px; color:var(--c-txt3); padding:0 14px 6px; flex-shrink:0; }
+
+    /* ════════════════════════════════════════════════════════════════
+       BADGES
+    ════════════════════════════════════════════════════════════════ */
+    .badge {
+      display:inline-flex; align-items:center; gap:4px;
+      font-size:9px; font-weight:700; padding:2px 7px;
+      border-radius:100px; text-transform:uppercase; letter-spacing:.03em;
+      white-space:nowrap;
+    }
+    .badge::before { content:''; width:5px; height:5px; border-radius:50%; display:inline-block; }
+    .badge.ok   { color:var(--c-success); background:var(--c-success-bg); }
+    .badge.ok::before { background:var(--c-success); }
+    .badge.warn { color:var(--c-warning); background:var(--c-warning-bg); }
+    .badge.warn::before { background:var(--c-warning); }
+    .badge.err  { color:var(--c-danger); background:var(--c-danger-bg); }
+    .badge.err::before { background:var(--c-danger); }
+    .badge.idle { color:var(--c-idle); background:var(--c-idle-bg); }
+    .badge.idle::before { background:var(--c-idle); }
+    .badge.info { color:var(--c-primary); background:var(--c-primary-bg); }
+    .badge.info::before { background:var(--c-primary); }
+
+    /* ════════════════════════════════════════════════════════════════
+       METRIC BARS
+    ════════════════════════════════════════════════════════════════ */
+    .metric-stack { display:flex; flex-direction:column; gap:8px; width:100%; }
+    .metric-row { display:flex; flex-direction:column; gap:3px; }
+    .metric-meta { display:flex; justify-content:space-between; font-size:10px; font-weight:500; }
+    .bar-track { height:5px; background:var(--c-border-lt); border-radius:3px; overflow:hidden; }
+    .bar-fill  { height:100%; border-radius:3px; transition: width 0.8s ease; }
+    .bar-fill.b  { background:var(--c-primary); }
+    .bar-fill.g  { background:var(--c-success); }
+    .bar-fill.w  { background:var(--c-warning); }
+    .bar-fill.r  { background:var(--c-danger); }
+    .bar-fill.p  { background:var(--c-purple); }
+    .bar-fill.t  { background:var(--c-teal); }
+
+    /* ════════════════════════════════════════════════════════════════
+       EQUIPMENT LIST ROWS
+    ════════════════════════════════════════════════════════════════ */
+    .eq-list { display:flex; flex-direction:column; gap:5px; width:100%; }
+    .eq-row {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:7px 10px;
+      border:1px solid var(--c-border-lt);
+      border-radius:var(--r-sm);
+      background:#F8FAFC;
+      cursor:pointer;
+      transition:background .12s;
+    }
+    .eq-row:hover { background:var(--c-primary-bg); }
+    .eq-info { display:flex; flex-direction:column; }
+    .eq-name { font-size:11px; font-weight:600; color:var(--c-txt); }
+    .eq-meta { font-size:9px; color:var(--c-txt2); }
+
+    /* ════════════════════════════════════════════════════════════════
+       DATA TABLE
+    ════════════════════════════════════════════════════════════════ */
+    .tbl-wrap { width:100%; height:100%; display:flex; flex-direction:column; overflow:hidden; align-self:stretch; }
+    .data-tbl { width:100%; border-collapse:collapse; font-size:11px; }
+    .data-tbl thead { position:sticky; top:0; z-index:5; }
+    .data-tbl th {
+      background:#F8FAFC; color:var(--c-txt2);
+      font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em;
+      padding:7px 10px; border-bottom:1px solid var(--c-border);
+      text-align:left;
+    }
+    .data-tbl tbody { display:block; overflow-y:auto; width:100%; }
+    .data-tbl thead, .data-tbl tbody tr { display:table; width:100%; table-layout:fixed; }
+    .data-tbl td { padding:7px 10px; border-bottom:1px solid var(--c-border-lt); color:var(--c-txt); vertical-align:middle; }
+    .data-tbl tbody tr:hover { background:var(--c-border-lt); }
+
+    /* ════════════════════════════════════════════════════════════════
+       GAUGE
+    ════════════════════════════════════════════════════════════════ */
+    .gauge-wrap { position:relative; width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+    .gauge-center { position:absolute; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+    .gauge-val { font-size:22px; font-weight:700; color:var(--c-txt); line-height:1; }
+    .gauge-lbl { font-size:9px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--c-txt2); margin-top:2px; }
+
+    /* ════════════════════════════════════════════════════════════════
+       WORD CLOUD (simple inline word display)
+    ════════════════════════════════════════════════════════════════ */
+    .word-cloud {
+      display:flex; flex-wrap:wrap; gap:4px; align-items:center; justify-content:center;
+      width:100%; height:100%; padding:4px;
+      align-content:center;
+    }
+    .wc-word {
+      padding:2px 7px; border-radius:100px; font-weight:600;
+      white-space:nowrap; cursor:pointer; transition:transform .12s;
+    }
+    .wc-word:hover { transform:scale(1.12); box-shadow:var(--shadow-sm); }
+    /* Clickable cards */
+    .card { cursor:pointer; transition:border-color .15s, box-shadow .15s; }
+    .card:hover { border-color:var(--c-primary-lt); box-shadow:var(--shadow-md); }
+    .metric-row { cursor:pointer; padding:4px 6px; border-radius:var(--r-sm); transition:background .12s; }
+    .metric-row:hover { background:var(--c-primary-bg); }
+    .data-tbl tbody tr { cursor:pointer; }
+
+    /* ════════════════════════════════════════════════════════════════
+       STATUS GRID
+    ════════════════════════════════════════════════════════════════ */
+    .status-grid {
+      display:grid;
+      grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
+      gap:5px;
+      width:100%; align-content:start;
+    }
+    .sc {
+      aspect-ratio:1.4;
+      border-radius: var(--r-sm);
+      display:flex; align-items:center; justify-content:center;
+      font-size:9px; font-weight:700;
+      cursor:pointer; position:relative;
+      transition:transform .12s ease, box-shadow .12s ease;
+      border: 1px solid transparent;
+    }
+    .sc:hover { transform:scale(1.08); z-index:2; box-shadow:var(--shadow-md); }
+    .sc.ok   { background:var(--c-success-bg); border-color:var(--c-success); color:var(--c-success); }
+    .sc.warn { background:var(--c-warning-bg); border-color:var(--c-warning); color:var(--c-warning); }
+    .sc.err  { background:var(--c-danger-bg);  border-color:var(--c-danger);  color:var(--c-danger); }
+    .sc.idle { background:var(--c-idle-bg);    border-color:var(--c-border);  color:var(--c-idle); }
+    .matrix-legend {
+      display:flex; gap:10px; align-items:center;
+      font-size:9px; color:var(--c-txt2); font-weight:500;
+      padding:4px 12px 8px; flex-shrink:0;
+    }
+    .ml-dot { width:7px; height:7px; border-radius:2px; }
+
+    /* ════════════════════════════════════════════════════════════════
+       ASSET CARDS (Portfolio)
+    ════════════════════════════════════════════════════════════════ */
+    .asset-card-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:8px; width:100%; }
+    .asset-card {
+      border:1px solid var(--c-border);
+      border-radius:var(--r-md);
+      padding:10px;
+      background:#F8FAFC;
+      display:flex; flex-direction:column; gap:4px;
+      cursor:pointer;
+      transition:border-color .15s, box-shadow .15s;
+    }
+    .asset-card:hover { border-color:var(--c-primary-lt); box-shadow:var(--shadow-md); }
+    .asset-card.tentative { border-style:dashed; border-color:var(--c-purple); }
+    .ac-name { font-size:12px; font-weight:700; display:flex; align-items:center; gap:4px; }
+    .ac-spv { font-size:9px; color:var(--c-txt3); font-weight:500; }
+    .ac-stats { display:flex; gap:8px; margin-top:2px; }
+    .ac-stat { display:flex; flex-direction:column; }
+    .ac-stat-val { font-size:14px; font-weight:700; color:var(--c-primary); }
+    .ac-stat-lbl { font-size:8px; color:var(--c-txt3); text-transform:uppercase; letter-spacing:.04em; font-weight:600; }
+
+    /* ════════════════════════════════════════════════════════════════
+       MODAL
+    ════════════════════════════════════════════════════════════════ */
+    .modal-overlay {
+      position:fixed; inset:0;
+      background:rgba(15,23,42,.45);
+      z-index:9000;
+      display:none;
+      align-items:center; justify-content:center;
+      backdrop-filter: blur(2px);
+    }
+    .modal-overlay.open { display:flex; animation:fadeIn .18s ease-out; }
+    .modal {
+      background:var(--c-card);
+      border:1px solid var(--c-border);
+      border-radius:var(--r-lg);
+      box-shadow:0 20px 60px rgba(0,0,0,.18);
+      width:620px; max-width:96vw; max-height:86vh;
+      overflow-y:auto;
+      display:flex; flex-direction:column;
+    }
+    .modal-hdr {
+      padding:16px 18px 12px;
+      border-bottom:1px solid var(--c-border);
+      display:flex; align-items:flex-start; justify-content:space-between;
+      flex-shrink:0; position:sticky; top:0; background:var(--c-card); z-index:2;
+    }
+    .modal-title-group { display:flex; flex-direction:column; gap:2px; }
+    .modal-title { font-size:15px; font-weight:700; color:var(--c-txt); }
+    .modal-subtitle { font-size:10px; color:var(--c-txt2); }
+    .modal-close {
+      width:28px; height:28px; border-radius:50%;
+      background:var(--c-border-lt); border:none;
+      display:flex; align-items:center; justify-content:center;
+      cursor:pointer; color:var(--c-txt2); flex-shrink:0;
+    }
+    .modal-close:hover { background:var(--c-border); }
+    .modal-body { padding:14px 18px 18px; display:flex; flex-direction:column; gap:12px; }
+    .modal-params { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; }
+    .mp { display:flex; flex-direction:column; gap:2px; padding:8px 10px; background:#F8FAFC; border:1px solid var(--c-border-lt); border-radius:var(--r-sm); }
+    .mp-label { font-size:9px; color:var(--c-txt2); font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+    .mp-val   { font-size:14px; font-weight:700; color:var(--c-txt); }
+
+    canvas { max-width:100%; }
+
+    /* Chart container — gives Chart.js a strict boundary for resize */
+    .chart-container { position: relative; height: 100%; width: 100%; }
+
+    /* Scroll-lock utility for modals */
+    .no-scroll { overflow: hidden !important; }
+
+    /* ════════════════════════════════════════════════════════════════
+       FOCUS MODE — Single-widget fullscreen for popped-out windows
+    ════════════════════════════════════════════════════════════════ */
+    body.focus-mode .header,
+    body.focus-mode .sidebar,
+    body.focus-mode .modal-overlay,
+    body.focus-mode #drag-drop-zone { display: none !important; }
+    body.focus-mode .main {
+      margin: 0; width: 100vw; height: 100vh;
+      overflow: hidden;
+    }
+    body.focus-mode .section { display: none !important; }
+    body.focus-mode .section.active {
+      display: flex !important;
+      height: 100vh; width: 100vw;
+      padding: 0; gap: 0;
+    }
+    body.focus-mode .section.active > * { display: none !important; }
+    body.focus-mode .section.active > .focus-target {
+      display: flex !important;
+      width: 100vw !important; height: 100vh !important;
+      max-height: 100vh !important;
+      grid-column: 1 / -1 !important;
+      border-radius: 0 !important; border: none !important;
+      box-shadow: none !important;
+    }
+    body.focus-mode .section.active > .focus-target.kpi {
+      align-items: center; justify-content: center;
+      padding: 40px;
+    }
+    body.focus-mode .section.active > .focus-target.kpi .kpi-val { font-size: 72px; }
+    body.focus-mode .section.active > .focus-target.kpi .kpi-lbl { font-size: 18px; }
+    body.focus-mode .section.active > .focus-target.kpi .kpi-sub { font-size: 16px; }
+    body.focus-mode .section.active > .focus-target.kpi .kpi-ico {
+      width: 64px; height: 64px; font-size: 28px;
+    }
+    body.focus-mode .kpi-strip { display: contents !important; }
+
+    /* ════════════════════════════════════════════════════════════════
+       DRAG & DROP — Visual states
+    ════════════════════════════════════════════════════════════════ */
+    .card[draggable="true"],
+    .kpi[draggable="true"] {
+      cursor: grab;
+    }
+    .card[draggable="true"]:active,
+    .kpi[draggable="true"]:active {
+      cursor: grabbing;
+    }
+    .is-dragging {
+      opacity: 0.35 !important;
+      transform: scale(0.97);
+      box-shadow: none !important;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       DROP ZONE — Glassmorphic bar
+    ════════════════════════════════════════════════════════════════ */
+    .drop-zone {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: 72px;
+      z-index: 8000;
+      display: flex; align-items: center; justify-content: center; gap: 12px;
+      background: rgba(255, 255, 255, 0.65);
+      backdrop-filter: blur(16px) saturate(1.8);
+      -webkit-backdrop-filter: blur(16px) saturate(1.8);
+      border-top: 2px dashed var(--c-border);
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.08);
+      transform: translateY(100%);
+      opacity: 0;
+      transition: transform .28s cubic-bezier(.22,1,.36,1), opacity .2s ease,
+                  border-color .15s ease, background .15s ease;
+      pointer-events: none;
+      user-select: none;
+    }
+    .drop-zone.visible {
+      transform: translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .drop-zone.drag-over {
+      border-color: var(--c-primary);
+      background: rgba(219, 234, 254, 0.75);
+      box-shadow: 0 -8px 32px rgba(29, 78, 216, 0.12);
+    }
+    .drop-zone-icon {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      background: var(--c-primary-bg);
+      color: var(--c-primary);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: transform .2s ease, background .15s ease;
+    }
+    .drop-zone.drag-over .drop-zone-icon {
+      background: var(--c-primary);
+      color: #fff;
+      transform: scale(1.12);
+    }
+    .drop-zone-text {
+      font-size: 13px; font-weight: 600;
+      color: var(--c-txt2);
+      letter-spacing: -0.01em;
+      transition: color .15s ease;
+    }
+    .drop-zone.drag-over .drop-zone-text {
+      color: var(--c-primary);
+    }
+    .drop-zone-hint {
+      font-size: 10px; font-weight: 500;
+      color: var(--c-txt3);
+      background: rgba(255,255,255,0.7);
+      padding: 2px 8px; border-radius: 100px;
+      border: 1px solid var(--c-border-lt);
+    }
+    @keyframes dropPulse {
+      0%, 100% { box-shadow: 0 -8px 32px rgba(29,78,216,0.12); }
+      50% { box-shadow: 0 -8px 32px rgba(29,78,216,0.22); }
+    }
+    .drop-zone.drag-over {
+      animation: dropPulse 1.2s ease infinite;
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       RESPONSIVE BREAKPOINTS — "Projector Problem" fix
+    ════════════════════════════════════════════════════════════════ */
+    @media (max-width: 1200px) {
+      .col-2, .col-3, .col-4, .col-5, .col-6,
+      .col-7, .col-8, .col-9 { grid-column: span 6; }
+      .col-12 { grid-column: span 12; }
+      .asset-card-grid { grid-template-columns: repeat(3, 1fr); }
+      .section.active {
+        grid-template-rows: auto;
+        overflow-y: auto;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .col-2, .col-3, .col-4, .col-5, .col-6,
+      .col-7, .col-8, .col-9, .col-12 { grid-column: span 12; }
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+      }
+      .main {
+        margin-left: 0;
+        width: 100vw;
+        overflow-y: auto;
+      }
+      .section.active {
+        grid-template-rows: auto;
+        overflow-y: auto;
+        height: auto;
+        min-height: 100%;
+      }
+      .kpi-strip { flex-wrap: wrap; }
+      .asset-card-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       DIGITAL TWIN (ISOMETRIC)
+    ════════════════════════════════════════════════════════════════ */
+    .dt-container {
+      width: 100%; height: 100%;
+      display: flex; align-items: center; justify-content: center;
+      perspective: 1000px;
+    }
+    .dt-svg {
+      width: 85%; height: 85%;
+      transform: rotateX(60deg) rotateZ(-45deg);
+      transform-style: preserve-3d;
+      transition: transform 0.5s ease;
+      filter: drop-shadow(-10px 20px 15px rgba(0,0,0,0.4));
+    }
+    .dt-zone {
+      fill: rgba(59, 130, 246, 0.15);
+      stroke: #3B82F6; stroke-width: 2;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      transform-origin: center;
+    }
+    .dt-zone:hover {
+      fill: rgba(59, 130, 246, 0.4);
+      transform: translateY(-8px);
+    }
+    .dt-zone.alert {
+      fill: rgba(220, 38, 38, 0.3);
+      stroke: #EF4444;
+      animation: pulse-alert 1.5s infinite;
+    }
+    .dt-zone.alert:hover {
+      fill: rgba(220, 38, 38, 0.6);
+      transform: translateY(-8px);
+    }
+    @keyframes pulse-alert {
+      0%, 100% { fill: rgba(220, 38, 38, 0.2); }
+      50% { fill: rgba(220, 38, 38, 0.6); filter: drop-shadow(0 0 12px rgba(220, 38, 38, 0.8)); }
+    }
+
+
+    
+    .header-btn {
+      display: flex; align-items: center; gap: 6px;
+      background: var(--c-idle-bg); border: 1px solid var(--c-border);
+      padding: 4px 10px; border-radius: var(--r-sm);
+      font-size: 10px; font-weight: 600; color: var(--c-txt2); cursor: pointer;
+      transition: all 0.15s;
+    }
+    .header-btn:hover { background: var(--c-border-lt); color: var(--c-txt); }
+
+    /* ════════════════════════════════════════════════════════════════
+       SYNC GLOW
+    ════════════════════════════════════════════════════════════════ */
+    .sync-glow {
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.6) !important;
+      border-color: var(--c-primary-lt) !important;
+      background: var(--c-primary-bg) !important;
+    }
+    .cctv-label {
+      position: absolute; bottom: 6px; left: 8px;
+      font-size: 8px; font-family: monospace; color: #4ADE80;
+      background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 2px;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+    }
+    .cctv-rec-dot {
+      position: absolute; top: 8px; right: 8px;
+      width: 6px; height: 6px; background: #EF4444;
+      border-radius: 50%; animation: blink-cctv 1s infinite step-end;
+      pointer-events: none;
+    }
+    @keyframes blink-cctv {
+      50% { opacity: 0; }
+    }
+    .cctv-window {
+      transition: all 0.15s ease;
+    }
+    .cctv-window:hover {
+      border-color: var(--c-primary-lt) !important;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+    }
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════ -->
+<header class="header">
+  <div class="header-left">
+    <div class="brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 22V12h6v10"/><path d="M3 9h18"/>
+      </svg>
+    </div>
+    <div class="header-titles">
+      <h1 class="header-title">CRE Command Center</h1>
+      <span class="header-sub">Edelweiss Alternatives · 5 Assets · 57,31,904 sft GLA · 13 Billing Units</span>
+    </div>
+  </div>
+  <div class="header-center">
+    <span id="live-clock" class="live-clock">00:00:00</span>
+    <span id="live-date" class="live-date">Loading…</span>
+  </div>
+  <div class="header-right">
+    <div style="display:flex;align-items:center;gap:6px;">
+      <div class="sys-status-dot"></div>
+      <span class="sys-status-label">All Systems Operational</span>
+    </div>
+    <span class="header-tag">LIVE 24/7</span>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     SIDEBAR
+═══════════════════════════════════════════════════════ -->
+<aside class="sidebar">
+  <nav>
+    <div class="sidebar-label">Dashboard</div>
+    <a class="nav-item active" href="#" onclick="showSection('sec-bms');return false;" data-sec="sec-bms">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M12 7V3M8 7V5M16 7V5"/></svg>
+      <span>BMS</span>
+      <div class="nav-dot" style="background:var(--c-warning);" title="3 Alerts"></div>
+    </a>
+    <a class="nav-item sub-item" href="#" onclick="showSection('sec-bms-cctv');return false;" data-sec="sec-bms-cctv" style="padding-left: 28px; font-size: 10px; opacity: 0.85;">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+      <span>BMS CCTV Feeds</span>
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('sec-fms');return false;" data-sec="sec-fms">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+      <span>FMS</span>
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('sec-cafm');return false;" data-sec="sec-cafm">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      <span>CAFM</span>
+    </a>
+    <a class="nav-item" href="#" onclick="showSection('sec-portfolio');return false;" data-sec="sec-portfolio">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      <span>Portfolio Overview</span>
+    </a>
+    <div class="nav-divider"></div>
+    <div class="sidebar-label">Drill-Down</div>
+    <div class="tree-item active" onclick="onAssetChange('all')" id="tree-all"><span>🇮🇳</span> All India <span class="tree-count" style="margin-left:auto;font-size:9px;color:var(--c-txt3)">57.3L sft</span></div>
+    <div class="tree-nav">
+      <!-- SOUTH -->
+      <div class="tree-group">
+        <div class="tree-toggle open" onclick="this.classList.toggle('open')">
+          <span class="tree-arrow">▶</span> South <span class="tree-count">4 Assets · 46.3L sft</span>
+        </div>
+        <div class="tree-children">
+          <!-- Karnataka → Bangalore -->
+          <div class="tree-item city-item">Karnataka → Bangalore</div>
+          <div class="tree-item asset-item" onclick="onAssetChange('mfar')" data-asset="mfar">
+            <span class="tree-dot"></span> MFAR <span style="font-size:9px;color:var(--c-txt3);margin-left:auto">MMTP · 5 BU</span>
+          </div>
+          <!-- Tamil Nadu → Chennai -->
+          <div class="tree-item city-item">Tamil Nadu → Chennai</div>
+          <div class="tree-item asset-item" onclick="onAssetChange('spic')" data-asset="spic">
+            <span class="tree-dot"></span> SPIC <span style="font-size:9px;color:var(--c-txt3);margin-left:auto">VOPPL · 1 BU</span>
+          </div>
+          <!-- Telangana → Hyderabad -->
+          <div class="tree-item city-item">Telangana → Hyderabad</div>
+          <div class="tree-item asset-item" onclick="onAssetChange('itpg')" data-asset="itpg">
+            <span class="tree-dot"></span> ITPG <span style="font-size:9px;color:var(--c-txt3);margin-left:auto">VOPPL4/4A · 2 BU</span>
+          </div>
+          <div class="tree-item asset-item tentative-item" onclick="onAssetChange('vistas')" data-asset="vistas">
+            <span class="tree-dot" style="background:var(--c-purple)"></span> Vistas (TEC) <span style="font-size:9px;color:var(--c-purple);margin-left:auto">+1 TBD</span>
+          </div>
+        </div>
+      </div>
+      <!-- WEST -->
+      <div class="tree-group">
+        <div class="tree-toggle open" onclick="this.classList.toggle('open')">
+          <span class="tree-arrow">▶</span> West <span class="tree-count">1 Asset · 11.0L sft</span>
+        </div>
+        <div class="tree-children">
+          <div class="tree-item city-item">Maharashtra → Pune</div>
+          <div class="tree-item asset-item" onclick="onAssetChange('weikfield')" data-asset="weikfield">
+            <span class="tree-dot"></span> Weikfield <span style="font-size:9px;color:var(--c-txt3);margin-left:auto">VOPPL6 · 3 BU</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="sidebar-footer">
+    <div class="sf-row"><span>Selected</span><span class="sf-val" id="sf-asset">All India</span></div>
+    <div class="sf-row" style="margin-top:3px"><span>Data Refresh</span><span class="sf-val">Live · 5s</span></div>
+  </div>
+</aside>
+
+<!-- ═══════════════════════════════════════════════════════
+     MAIN CONTENT
+═══════════════════════════════════════════════════════ -->
+<main class="main">
+
+  <!-- ─────────────────── BMS ─────────────────── -->
+  <section class="section active" id="sec-bms">
+    <div class="kpi-strip" id="bms-kpi-strip"></div>
+    <!-- Row 2 -->
+    <div class="card col-5" id="card-bms-energy" draggable="true" onclick="openChartModal('Energy Consumption','30-Day energy trend across all assets','Shows daily kWh consumption per asset. EB = Electricity Board supply. Peaks indicate weekday operational hours. Weekend dips visible on days 6-7, 13-14, 20-21, 27-28.')">
+      <div class="card-hdr"><span class="card-title">30-Day Energy Consumption Trend (kWh)</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-bms-energy"></canvas></div></div>
+    </div>
+    <div class="card col-4" id="card-bms-efficiency" draggable="true" onclick="openChartModal('Asset Efficiency','BMS Performance Metrics','COP (Coefficient of Performance): Chiller efficiency ratio — higher is better. SEGR (Specific Energy Generation Rate): Energy per unit area. EPI: Energy Performance Index. IKW/TR: Input kW per Ton of Refrigeration — lower is better. TX Efficiency: Transformer load efficiency.')">
+      <div class="card-hdr"><span class="card-title">Asset Efficiency Metrics</span><span class="badge ok">Live</span></div>
+      <div class="card-body col scroll" style="padding:10px 14px;">
+        <div class="metric-stack" id="bms-efficiency-metrics"></div>
+      </div>
+    </div>
+    <div class="card col-3" id="card-bms-utility" draggable="true" onclick="openChartModal('Utility Source Mix','Energy Supply Breakdown','Shows percentage split of energy sourced from EB (Electricity Board), DG (Diesel Generator), Solar, Water recycling, and Waste-to-energy across selected assets.')">
+      <div class="card-hdr"><span class="card-title">Utility Source Mix</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-bms-utility"></canvas></div></div>
+    </div>
+    <!-- Row 3 -->
+    <div class="card col-3" id="card-bms-aqi" draggable="true" onclick="openAQIModal()">
+      <div class="card-hdr"><span class="card-title">Indoor AQI Gauge</span></div>
+      <div class="card-body">
+        <div class="gauge-wrap">
+          <div class="chart-container"><canvas id="chart-bms-aqi"></canvas></div>
+          <div class="gauge-center"><span class="gauge-val" id="bms-aqi-val">46</span><span class="gauge-lbl" style="color:var(--c-success)">Good AQI</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="card col-5" id="card-bms-heatmap" draggable="true" onclick="openChartModal('Energy Heatmap','Hourly Load Distribution (Mon-Fri)','Shows average energy load % by hour across weekdays. Peak consumption typically occurs between 10am–4pm during operational hours. Low load detected in early morning and late evening hours.')">
+      <div class="card-hdr"><span class="card-title">Energy Consumption Heatmap (Hour × Day)</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-bms-heatmap"></canvas></div></div>
+    </div>
+    <div class="card col-4" id="card-bms-water" draggable="true" onclick="openWaterModal()">
+      <div class="card-hdr"><span class="card-title">Water Quality Parameters</span><span class="badge ok">Within Norms</span></div>
+      <div class="card-body col scroll" style="padding:8px 14px;" id="bms-water-params"></div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── BMS CCTV FEEDS ─────────────────── -->
+  <section class="section" id="sec-bms-cctv">
+    <div class="card col-12" id="card-bms-cctv" draggable="true">
+      <div class="card-hdr">
+        <span class="card-title">CCTV Surveillance Grid — Click feed to expand</span>
+        <span class="badge ok">AI Threat Engine Active</span>
+      </div>
+      <div class="card-body pad-none" style="padding: 10px; background: #020617;">
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(2, 1fr); gap: 10px; width: 100%; height: 100%;">
+          <!-- CCTV 1 -->
+          <div class="cctv-window" onclick="expandCCTV(1)" style="position: relative; background: #000; border: 1px solid #1e293b; border-radius: 4px; overflow: hidden; cursor: pointer; height: 100%;">
+            <canvas id="cctv-canvas-1" style="width: 100%; height: 100%; display: block; background: #000;"></canvas>
+            <div class="cctv-label">CCTV-01 · LOBBY EAST</div>
+            <div class="cctv-rec-dot"></div>
+          </div>
+          <!-- CCTV 2 -->
+          <div class="cctv-window" onclick="expandCCTV(2)" style="position: relative; background: #000; border: 1px solid #1e293b; border-radius: 4px; overflow: hidden; cursor: pointer; height: 100%;">
+            <canvas id="cctv-canvas-2" style="width: 100%; height: 100%; display: block; background: #000;"></canvas>
+            <div class="cctv-label">CCTV-02 · PERIMETER WEST</div>
+            <div class="cctv-rec-dot"></div>
+          </div>
+          <!-- CCTV 3 -->
+          <div class="cctv-window" onclick="expandCCTV(3)" style="position: relative; background: #000; border: 1px solid #1e293b; border-radius: 4px; overflow: hidden; cursor: pointer; height: 100%;">
+            <canvas id="cctv-canvas-3" style="width: 100%; height: 100%; display: block; background: #000;"></canvas>
+            <div class="cctv-label">CCTV-03 · SERVER ROOM RACK B</div>
+            <div class="cctv-rec-dot"></div>
+          </div>
+          <!-- CCTV 4 -->
+          <div class="cctv-window" onclick="expandCCTV(4)" style="position: relative; background: #000; border: 1px solid #1e293b; border-radius: 4px; overflow: hidden; cursor: pointer; height: 100%;">
+            <canvas id="cctv-canvas-4" style="width: 100%; height: 100%; display: block; background: #000;"></canvas>
+            <div class="cctv-label">CCTV-04 · LOADING DOCK</div>
+            <div class="cctv-rec-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── FMS ─────────────────── -->
+  <section class="section" id="sec-fms">
+    <div class="kpi-strip" id="fms-kpi-strip"></div>
+    <!-- Row 2 -->
+    <div class="card col-5" id="card-fms-sla" draggable="true" onclick="openChartModal('SLA & PPM Trend','12-Month Performance','Tracks SLA weighted score and PPM (Planned Preventive Maintenance) compliance per asset over 12 months. Red dashed line = 95% SLA target. Assets below target require corrective action plans.')">
+      <div class="card-hdr"><span class="card-title">SLA & PPM Performance Trend (12 Months)</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-fms-sla"></canvas></div></div>
+    </div>
+    <div class="card col-3" id="card-fms-wo" draggable="true" onclick="openWOModal()">
+      <div class="card-hdr"><span class="card-title">Work Order Status</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-fms-wo"></canvas></div></div>
+    </div>
+    <div class="card col-4" id="card-fms-optimizer" draggable="true">
+      <div class="card-hdr">
+        <span class="card-title">Adaptive Resource Allocation</span>
+        <span class="badge info" id="opt-algo-badge" style="font-family: monospace;">Knapsack 0/1</span>
+      </div>
+      <div class="card-body col scroll" style="padding: 10px 14px;">
+        <div style="margin-bottom: 8px;">
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; margin-bottom: 3px;">
+            <span>Daily Man-Hour Constraint</span>
+            <span id="opt-budget-label">16 / 24 hrs</span>
+          </div>
+          <div class="bar-track" style="height: 6px;"><div class="bar-fill p" id="opt-budget-bar" style="width: 66%;"></div></div>
+        </div>
+        <div id="opt-task-list" style="display: flex; flex-direction: column; gap: 5px; width: 100%;">
+          <!-- Populated by JS -->
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; border-top: 1px solid var(--c-border-lt); padding-top: 6px; font-size: 10px;">
+          <span style="color: var(--c-txt3);">Optimized Impact:</span>
+          <span id="opt-total-impact" style="font-weight: 700; color: var(--c-success);">88/135 pts</span>
+        </div>
+      </div>
+    </div>
+    <!-- Row 3 -->
+    <div class="card col-4" id="card-fms-scorecard" draggable="true">
+      <div class="card-hdr"><span class="card-title">KPI Scorecard (RAG Status)</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="tbl-wrap">
+          <table class="data-tbl" id="fms-kpi-table">
+            <thead><tr><th style="width:30%">KPI</th><th style="width:20%">Target</th><th style="width:20%">Actual</th><th style="width:30%">Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card col-4" id="card-fms-dt" draggable="true">
+      <div class="card-hdr"><span class="card-title">Live Floorplan (Digital Twin)</span><span class="badge warn" id="dt-badge">Zone 3 Alert</span></div>
+      <div class="card-body pad-none" style="background:#0F172A; position:relative; overflow:hidden;">
+        <div class="dt-container">
+          <svg viewBox="0 0 200 200" class="dt-svg">
+            <polygon points="10,10 90,10 90,90 10,90" class="dt-zone" id="dt-z1" />
+            <polygon points="110,10 190,10 190,90 110,90" class="dt-zone" id="dt-z2" />
+            <polygon points="10,110 90,110 90,190 10,190" class="dt-zone alert" id="dt-z3" />
+            <polygon points="110,110 190,110 190,190 110,190" class="dt-zone" id="dt-z4" />
+            <!-- Inner grid detail -->
+            <polygon points="40,40 160,40 160,160 40,160" class="dt-zone" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1" stroke-dasharray="4 4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+    <div class="card col-4" id="card-fms-alerts" draggable="true">
+      <div class="card-hdr"><span class="card-title">Active Alerts & Incidents</span><span class="badge warn" id="fms-alert-badge">5 Open</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="eq-list" style="padding:8px;" id="fms-alerts-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── CAFM ─────────────────── -->
+  <section class="section" id="sec-cafm">
+    <div class="kpi-strip" id="cafm-kpi-strip"></div>
+    <!-- Row 2 -->
+    <div class="card col-3" id="card-cafm-tickets" draggable="true" onclick="openTicketModal()">
+      <div class="card-hdr"><span class="card-title">Help Desk Tickets</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-cafm-tickets"></canvas></div></div>
+    </div>
+    <div class="card col-5" id="card-cafm-ppm" draggable="true" onclick="openChartModal('PPM Completion','Planned Preventive Maintenance by Asset','Daily, Weekly, and Monthly PPM checklist completion rates. QR-based scan tracking ensures field verification. Target: Daily ≥ 90%, Weekly ≥ 85%, Monthly ≥ 80%.')">
+      <div class="card-hdr"><span class="card-title">PPM Completion by Asset (%)</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-cafm-ppm"></canvas></div></div>
+    </div>
+    <div class="card col-4" id="card-cafm-vendor" draggable="true" onclick="openChartModal('Vendor Scorecard','On-Time Delivery & Quality Metrics','OTD (On-Time Delivery) measures vendor response within SLA window. Quality score based on first-time-fix rate, rework percentage, and CSAT feedback from site teams.')">
+      <div class="card-hdr"><span class="card-title">Vendor Scorecard — OTD & Quality</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-cafm-vendor"></canvas></div></div>
+    </div>
+    <!-- Row 3 -->
+    <div class="card col-4" id="card-cafm-checklist" draggable="true">
+      <div class="card-hdr"><span class="card-title">Checklist Compliance (Daily/Weekly/Monthly)</span></div>
+      <div class="card-body col scroll" style="padding:10px 14px;">
+        <div class="metric-stack" id="cafm-checklist-metrics"></div>
+      </div>
+    </div>
+    <div class="card col-4" id="card-cafm-amc" draggable="true">
+      <div class="card-hdr"><span class="card-title">AMC & Contract Tracker</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="tbl-wrap">
+          <table class="data-tbl" id="cafm-amc-table">
+            <thead><tr><th style="width:25%">Asset</th><th style="width:20%">Active AMCs</th><th style="width:20%">Expiring</th><th style="width:15%">OTD %</th><th style="width:20%">Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card col-4" id="card-cafm-cv" draggable="true">
+      <div class="card-hdr"><span class="card-title">Smart Gate Analytics</span><span class="badge ok" id="cv-status-badge">AI Active</span></div>
+      <div class="card-body pad-none" style="background:#000; position:relative; overflow:hidden;">
+        <canvas id="cv-canvas" style="position:absolute; inset:0; width:100%; height:100%; opacity:0.9;"></canvas>
+        <div style="position:absolute; top:8px; left:8px; display:flex; gap:6px; align-items:center;">
+          <div class="sys-status-dot" style="background:#ef4444; box-shadow:0 0 0 3px rgba(239,68,68,0.2);"></div>
+          <span style="color:#ef4444; font-size:9px; font-weight:700; letter-spacing:1px; text-transform:uppercase;">REC</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─────────────────── PORTFOLIO ─────────────────── -->
+  <section class="section" id="sec-portfolio">
+    <div class="kpi-strip" id="portfolio-kpi-strip"></div>
+    
+    <!-- ── PORTFOLIO-WIDE CARDS ── -->
+    <!-- Row 2 -->
+    <div class="card col-12" id="card-port-assets" draggable="true" style="max-height:180px">
+      <div class="card-hdr"><span class="card-title">Asset Portfolio — Click to drill into asset</span><span class="badge info">5 Assets · 13 BU</span></div>
+      <div class="card-body" style="padding:8px 12px;">
+        <div class="asset-card-grid" id="portfolio-asset-grid"></div>
+      </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="card col-3" id="card-port-gla" draggable="true">
+      <div class="card-hdr"><span class="card-title">GLA Distribution</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-port-gla"></canvas></div></div>
+    </div>
+    <div class="card col-5" id="card-port-occ" draggable="true">
+      <div class="card-hdr"><span class="card-title">Occupancy & NPS Trend (6 Months)</span></div>
+      <div class="card-body"><div class="chart-container"><canvas id="chart-port-occ"></canvas></div></div>
+    </div>
+    <div class="card col-4" id="card-port-finance" draggable="true">
+      <div class="card-hdr"><span class="card-title">Portfolio Financials & ESG Status</span><span class="badge ok">FY26 Target Met</span></div>
+      <div class="card-body col scroll" style="padding:10px 14px;">
+        <div class="metric-stack">
+          <div class="metric-row" style="margin-bottom:8px;"><div class="metric-meta"><span>MTD Revenue Portfolio-Wide</span><span style="font-weight:700">₹52.6 Cr</span></div></div>
+          <div class="metric-row" style="margin-bottom:8px;"><div class="metric-meta"><span>Weighted Collection Efficiency</span><span style="font-weight:700">98.2%</span></div></div>
+          <div class="metric-row" style="margin-bottom:8px;"><div class="metric-meta"><span>Average Rental Rate</span><span style="font-weight:700">₹91.4 / sft</span></div></div>
+          <div class="metric-row"><div class="metric-meta"><span>ESG Rating Certification</span><span style="font-weight:700; color:var(--c-success)">LEED Platinum (3) / Gold (2)</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="card col-4" id="card-port-leases" draggable="true">
+      <div class="card-hdr"><span class="card-title">Upcoming Lease Expirations (< 180 Days)</span><span class="badge warn">4 Critical</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="tbl-wrap">
+          <table class="data-tbl" style="font-size:9px">
+            <thead><tr><th style="width: 30%">Tenant</th><th style="width: 20%">Asset</th><th style="width: 25%">Area (sft)</th><th style="width: 25%">Expiry</th></tr></thead>
+            <tbody>
+              <tr><td style="font-weight:600">Accenture</td><td>MFAR</td><td>1,20,000</td><td style="color:var(--c-danger)">31-Oct-26</td></tr>
+              <tr><td style="font-weight:600">CitiGroup</td><td>SPIC</td><td>1,50,000</td><td style="color:var(--c-danger)">15-Nov-26</td></tr>
+              <tr><td style="font-weight:600">Infosys</td><td>Weikfield</td><td>2,00,000</td><td style="color:var(--c-warning)">30-Nov-26</td></tr>
+              <tr><td style="font-weight:600">HSBC</td><td>MFAR</td><td>85,000</td><td style="color:var(--c-warning)">15-Dec-26</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="card col-8" id="card-port-table" draggable="true">
+      <div class="card-hdr"><span class="card-title">Consolidated Portfolio Operations Table</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="tbl-wrap">
+          <table class="data-tbl" id="portfolio-operations-table">
+            <thead>
+              <tr>
+                <th style="font-weight:700; width: 14%">Asset Name</th>
+                <th style="width: 8%">Region</th>
+                <th style="width: 10%">City</th>
+                <th style="width: 12%">Total GLA</th>
+                <th style="width: 10%">Occupancy %</th>
+                <th style="width: 10%">Collection %</th>
+                <th style="width: 10%">BMS Uptime</th>
+                <th style="width: 14%">ESG Star Rating</th>
+                <th style="width: 12%">Alert Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Filled dynamically by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SINGLE-ASSET DEEP DIVE CARDS ── -->
+    <!-- Row 2 -->
+    <div class="card col-12" id="card-port-single-hdr" style="display: none; max-height: 80px; flex-direction: row; align-items: center; justify-content: space-between; padding: 12px 18px;">
+      <div>
+        <h2 id="single-asset-name" style="font-size: 16px; font-weight: 700; color: var(--c-txt);">— Deep Dive</h2>
+        <p id="single-asset-meta" style="font-size: 11px; color: var(--c-txt2);">—</p>
+      </div>
+      <div style="display: flex; gap: 20px; align-items: center;">
+        <div class="ac-stats" style="margin: 0; padding: 0; border: none; display: flex; gap: 15px;">
+          <div class="ac-stat" style="display: flex; flex-direction: column; align-items: flex-end;"><span class="ac-stat-val" id="single-stat-rent" style="font-size: 12px; font-weight: 700;">—</span><span class="ac-stat-lbl" style="font-size: 8px;">Avg Rent</span></div>
+          <div class="ac-stat" style="display: flex; flex-direction: column; align-items: flex-end;"><span class="ac-stat-val" id="single-stat-coll" style="font-size: 12px; font-weight: 700;">—</span><span class="ac-stat-lbl" style="font-size: 8px;">Collection</span></div>
+          <div class="ac-stat" style="display: flex; flex-direction: column; align-items: flex-end;"><span class="ac-stat-val" id="single-stat-rev" style="font-size: 12px; font-weight: 700;">—</span><span class="ac-stat-lbl" style="font-size: 8px;">MTD Rev</span></div>
+          <div class="ac-stat" style="display: flex; flex-direction: column; align-items: flex-end;"><span class="ac-stat-val" id="single-stat-esg" style="font-size: 12px; font-weight: 700; color: var(--c-success)">—</span><span class="ac-stat-lbl" style="font-size: 8px;">ESG Cert</span></div>
+        </div>
+        <button class="header-btn" onclick="onAssetChange('all')" style="background: var(--c-primary); color: #fff; border: none; font-size: 11px; padding: 6px 12px; border-radius:4px; cursor: pointer;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 4px; display: inline-block; vertical-align: middle;"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+          Return to Portfolio
+        </button>
+      </div>
+    </div>
+
+    <!-- Row 3 -->
+    <div class="card col-4" id="card-single-tenant-mix" style="display: none;">
+      <div class="card-hdr"><span class="card-title">Tenant Mix / Leasing Stack</span></div>
+      <div class="card-body">
+        <div class="chart-container"><canvas id="chart-single-tenant-mix"></canvas></div>
+      </div>
+    </div>
+    
+    <div class="card col-4" id="card-single-renewals" style="display: none;">
+      <div class="card-hdr"><span class="card-title">Upcoming Lease Renewals</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="tbl-wrap">
+          <table class="data-tbl" id="single-renewals-table" style="font-size: 9px;">
+            <thead><tr><th style="width: 30%">Tenant</th><th style="width: 25%">Area</th><th style="width: 25%">Expiry Date</th><th style="width: 20%">Status</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="card col-4" id="card-single-operational" style="display: none;">
+      <div class="card-hdr"><span class="card-title">Operational & Efficiency Status</span></div>
+      <div class="card-body col scroll" style="padding: 10px 14px;">
+        <div class="metric-stack" id="single-operational-stack">
+          <!-- Filled dynamically by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Row 4 -->
+    <div class="card col-12" id="card-single-floors" style="display: none;">
+      <div class="card-hdr"><span class="card-title">Floor-by-Floor GLA & Operational Status</span></div>
+      <div class="card-body pad-none scroll col">
+        <div class="tbl-wrap">
+          <table class="data-tbl" id="single-floors-table">
+            <thead>
+              <tr>
+                <th style="width: 20%">Floor</th>
+                <th style="width: 45%">Major Tenants</th>
+                <th style="width: 15%">GLA (sft)</th>
+                <th style="width: 20%">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- DROP ZONE — Drag a card here to launch in new window -->
+<div class="drop-zone" id="drag-drop-zone">
+  <div class="drop-zone-icon">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+      <line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:1px">
+    <span class="drop-zone-text">Drop here to launch in new window</span>
+    <span class="drop-zone-hint">Opens as a full-screen dedicated widget</span>
+  </div>
+</div>
+
+
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title-group">
+        <span class="modal-title" id="modal-title">Detail</span>
+        <span class="modal-subtitle" id="modal-subtitle">CRE Command Center</span>
+      </div>
+      <button class="modal-close" onclick="closeModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════ -->
+<script>
+/* ================================================================
+   CHART.JS DEFAULTS
+================================================================ */
+Chart.defaults.font.family = "Inter, system-ui, sans-serif";
+Chart.defaults.font.size = 10;
+Chart.defaults.color = '#64748B';
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.responsive = true;
+Chart.defaults.maintainAspectRatio = false;
+Chart.defaults.animation.duration = 500;
+
+const C = {
+  primary:'#1D4ED8', primaryLt:'#3B82F6',
+  success:'#059669', successBg:'rgba(5,150,105,.12)',
+  warning:'#D97706', warningBg:'rgba(217,119,6,.12)',
+  danger:'#DC2626', dangerBg:'rgba(220,38,38,.12)',
+  idle:'#6B7280', purple:'#7C3AED', teal:'#0D9488',
+  grid:'#F1F5F9', border:'#E2E8F0'
+};
+const TT = { backgroundColor:'#fff',titleColor:'#0F172A',bodyColor:'#475569',borderColor:'#E2E8F0',borderWidth:1,padding:10,cornerRadius:6,titleFont:{weight:'700',size:11},bodyFont:{size:10},boxPadding:3 };
+
+function fmtNum(n){ return n.toLocaleString('en-IN'); }
+function fmtGLA(n){ return (n/100000).toFixed(2)+'L'; }
+
+/* ================================================================
+   DATA MODEL
+================================================================ */
+const ASSETS = {
+  mfar:     { name:'MFAR', spv:'MMTP', bu:5, gla:1629119, city:'Bangalore', state:'Karnataka', region:'South',
+              bms:{ epi:142, wci:0.038, pf:0.96, cop:5.2, segr:0.82, carbon:1842, uptime:98.7, iaq:48, aaq:'Good', ikwtr:0.68, txEff:98.2, wastePSF:0.24,
+                    energyTrend:[4820,4710,4950,4680,4900,4750,4830,4620,4900,4780,4950,5020,4880,4710,4600,4850,4920,4780,4950,5100,4870,4680,4920,5010,4790,4680,4850,4930,4800,4750],
+                    utilMix:{eb:62,dg:8,solar:22,water:5,waste:3} },
+              fms:{ sla:94.2, ppm:91.5, openWo:18, closedWo:142, wipWo:24, incidents:3, trainingHrs:286, corrActions:88, auditScore:92, nearMiss:5, unsafeActs:2,
+                    slaTrend:[91,92,93,93.5,94,93,94.2,94.5,93.8,94,94.2,94.5], ppmTrend:[88,89,90,90,91,90,91,91.5,91,91,91.5,91.5] },
+              cafm:{ active:1240, fault:28, offline:12, amcActive:48, amcExpiring:3, checkDaily:94, checkWeekly:89, checkMonthly:85, openTix:14, closedTix:186, wipTix:8, vendorOtd:91, vendorQuality:88 } },
+  spic:     { name:'SPIC', spv:'VOPPL', bu:1, gla:693821, city:'Chennai', state:'Tamil Nadu', region:'South',
+              bms:{ epi:128, wci:0.042, pf:0.94, cop:4.8, segr:0.78, carbon:986, uptime:97.2, iaq:52, aaq:'Moderate', ikwtr:0.72, txEff:97.5, wastePSF:0.28,
+                    energyTrend:[2180,2150,2240,2100,2190,2160,2230,2080,2190,2140,2200,2280,2160,2100,2050,2190,2230,2140,2200,2310,2180,2060,2190,2260,2130,2060,2190,2230,2160,2120],
+                    utilMix:{eb:68,dg:10,solar:15,water:4,waste:3} },
+              fms:{ sla:92.8, ppm:88.4, openWo:12, closedWo:96, wipWo:15, incidents:2, trainingHrs:124, corrActions:82, auditScore:89, nearMiss:3, unsafeActs:1,
+                    slaTrend:[89,90,91,91.5,92,91,92.8,92.5,91.8,92,92.5,92.8], ppmTrend:[85,86,87,87,88,87,88,88.4,87.5,88,88,88.4] },
+              cafm:{ active:520, fault:18, offline:8, amcActive:22, amcExpiring:2, checkDaily:91, checkWeekly:86, checkMonthly:82, openTix:9, closedTix:112, wipTix:5, vendorOtd:87, vendorQuality:85 } },
+  itpg:     { name:'ITPG', spv:'VOPPL4/4A', bu:2, gla:1806858, city:'Hyderabad', state:'Telangana', region:'South',
+              bms:{ epi:135, wci:0.035, pf:0.97, cop:5.4, segr:0.85, carbon:2180, uptime:99.1, iaq:42, aaq:'Good', ikwtr:0.65, txEff:98.8, wastePSF:0.21,
+                    energyTrend:[5420,5310,5500,5280,5400,5350,5430,5220,5400,5380,5500,5580,5440,5310,5200,5380,5460,5340,5500,5620,5410,5280,5420,5510,5350,5280,5400,5480,5360,5320],
+                    utilMix:{eb:58,dg:7,solar:28,water:4,waste:3} },
+              fms:{ sla:95.6, ppm:93.8, openWo:22, closedWo:178, wipWo:18, incidents:1, trainingHrs:342, corrActions:94, auditScore:95, nearMiss:2, unsafeActs:0,
+                    slaTrend:[93,93.5,94,94.5,95,94.8,95.2,95.6,95,95.3,95.5,95.6], ppmTrend:[90,91,92,92,93,92,93,93.8,93,93,93.5,93.8] },
+              cafm:{ active:1480, fault:22, offline:6, amcActive:56, amcExpiring:1, checkDaily:96, checkWeekly:92, checkMonthly:90, openTix:11, closedTix:220, wipTix:7, vendorOtd:94, vendorQuality:92 } },
+  vistas:   { name:'Vistas (TEC)', spv:'VOPPL5', bu:1, buTentative:1, gla:499369, city:'Hyderabad', state:'Telangana', region:'South', tentative:true,
+              bms:{ epi:148, wci:0.044, pf:0.93, cop:4.6, segr:0.76, carbon:640, uptime:96.8, iaq:55, aaq:'Moderate', ikwtr:0.76, txEff:96.8, wastePSF:0.31,
+                    energyTrend:[1580,1550,1640,1500,1590,1560,1630,1480,1590,1540,1600,1680,1560,1500,1450,1590,1630,1540,1600,1710,1580,1460,1590,1660,1530,1460,1590,1630,1560,1520],
+                    utilMix:{eb:70,dg:12,solar:12,water:4,waste:2} },
+              fms:{ sla:90.4, ppm:85.2, openWo:8, closedWo:72, wipWo:10, incidents:4, trainingHrs:88, corrActions:78, auditScore:86, nearMiss:6, unsafeActs:3,
+                    slaTrend:[87,88,89,89.5,90,89,90.4,90,89.5,90,90.2,90.4], ppmTrend:[82,83,84,84,85,84,85,85.2,84.5,85,85,85.2] },
+              cafm:{ active:380, fault:15, offline:10, amcActive:18, amcExpiring:4, checkDaily:88, checkWeekly:82, checkMonthly:78, openTix:7, closedTix:84, wipTix:4, vendorOtd:84, vendorQuality:82 } },
+  weikfield:{ name:'Weikfield', spv:'VOPPL6', bu:3, gla:1102737, city:'Pune', state:'Maharashtra', region:'West',
+              bms:{ epi:138, wci:0.040, pf:0.95, cop:5.0, segr:0.80, carbon:1320, uptime:98.2, iaq:46, aaq:'Good', ikwtr:0.70, txEff:97.9, wastePSF:0.26,
+                    energyTrend:[3620,3510,3700,3480,3600,3550,3630,3420,3600,3580,3700,3780,3640,3510,3400,3580,3660,3540,3700,3820,3610,3480,3620,3710,3550,3480,3600,3680,3560,3520],
+                    utilMix:{eb:64,dg:9,solar:20,water:4,waste:3} },
+              fms:{ sla:93.4, ppm:90.2, openWo:15, closedWo:128, wipWo:12, incidents:2, trainingHrs:198, corrActions:86, auditScore:91, nearMiss:4, unsafeActs:1,
+                    slaTrend:[90,91,92,92.5,93,92,93.4,93,92.5,93,93.2,93.4], ppmTrend:[87,88,89,89,90,89,90,90.2,89.5,90,90,90.2] },
+              cafm:{ active:860, fault:20, offline:9, amcActive:34, amcExpiring:2, checkDaily:92, checkWeekly:88, checkMonthly:84, openTix:10, closedTix:154, wipTix:6, vendorOtd:90, vendorQuality:87 } }
+};
+
+const ASSET_DETAILS = {
+  mfar: {
+    propertyManager: "Rohan Sharma (Colliers)",
+    avgRent: "₹95 / sft",
+    collectionEff: "98.5%",
+    mtdRevenue: "₹15.4 Cr",
+    leaseExpiry90: 2,
+    efficiencyRating: "Platinum",
+    waterRecycleRate: "92%",
+    solarOffset: "22%",
+    upcomingRenewals: [
+      { tenant: "Accenture", area: "1,20,000 sft", date: "31-Oct-2026", status: "In Negotiation" },
+      { tenant: "HSBC", area: "85,000 sft", date: "15-Dec-2026", status: "Reviewing Options" }
+    ],
+    tenantMix: { "IT/ITeS": 45, "BFSI": 25, "Retail": 15, "Telecom": 10, "Vacant": 5 },
+    floors: [
+      { name: "Ground Floor", tenants: "Starbucks, HDFC Bank, Croma", gla: 150000, status: "Fully Leased" },
+      { name: "Floor 1-3 (Wing A)", tenants: "Accenture, HSBC", gla: 450000, status: "Fully Leased" },
+      { name: "Floor 4-6 (Wing B)", tenants: "Microsoft, Intel", gla: 500000, status: "Fully Leased" },
+      { name: "Floor 7-9 (Wing C)", tenants: "Airtel, Ericsson", gla: 400000, status: "Fully Leased" },
+      { name: "Floor 10 (Penthouse)", tenants: "Vacant / Under Discussion", gla: 129119, status: "Vacant" }
+    ]
+  },
+  spic: {
+    propertyManager: "Meera Nair (JLL)",
+    avgRent: "₹110 / sft",
+    collectionEff: "97.2%",
+    mtdRevenue: "₹7.6 Cr",
+    leaseExpiry90: 1,
+    efficiencyRating: "Gold",
+    waterRecycleRate: "85%",
+    solarOffset: "15%",
+    upcomingRenewals: [
+      { tenant: "CitiGroup", area: "1,50,000 sft", date: "15-Nov-2026", status: "Term Sheet Sent" }
+    ],
+    tenantMix: { "BFSI": 50, "Consulting": 30, "Co-working": 10, "F&B": 5, "Vacant": 5 },
+    floors: [
+      { name: "Ground Floor", tenants: "McDonald's, Axis Bank ATM", gla: 50000, status: "Fully Leased" },
+      { name: "Floor 1-4", tenants: "CitiGroup", gla: 300000, status: "Fully Leased" },
+      { name: "Floor 5-8", tenants: "PwC, EY", gla: 250000, status: "Fully Leased" },
+      { name: "Floor 9", tenants: "WeWork", gla: 60000, status: "Fully Leased" },
+      { name: "Floor 10", tenants: "Vacant", gla: 33821, status: "Vacant" }
+    ]
+  },
+  itpg: {
+    propertyManager: "K. Satish (CBRE)",
+    avgRent: "₹88 / sft",
+    collectionEff: "99.1%",
+    mtdRevenue: "₹15.9 Cr",
+    leaseExpiry90: 3,
+    efficiencyRating: "Platinum",
+    waterRecycleRate: "95%",
+    solarOffset: "28%",
+    upcomingRenewals: [
+      { tenant: "TCS", area: "2,50,000 sft", date: "30-Sep-2026", status: "Signed & Renewed" },
+      { tenant: "Wells Fargo", area: "180,000 sft", date: "31-Jan-2027", status: "In Discussion" },
+      { tenant: "Novartis", area: "90,000 sft", date: "28-Feb-2027", status: "Reviewing Options" }
+    ],
+    tenantMix: { "IT/ITeS": 60, "BFSI": 20, "Healthcare": 10, "Automotive": 5, "Vacant": 5 },
+    floors: [
+      { name: "GF & Lobby", tenants: "Subway, ICICI Bank", gla: 100000, status: "Fully Leased" },
+      { name: "Floors 1-5", tenants: "Cognizant, TCS", gla: 800000, status: "Fully Leased" },
+      { name: "Floors 6-10", tenants: "Wells Fargo, JPMC", gla: 500000, status: "Fully Leased" },
+      { name: "Floors 11-14", tenants: "Novartis, Hyundai", gla: 300000, status: "Fully Leased" },
+      { name: "Floor 15", tenants: "Vacant", gla: 106858, status: "Vacant" }
+    ]
+  },
+  vistas: {
+    propertyManager: "A. K. Reddy (Cushman & Wakefield)",
+    avgRent: "₹72 / sft",
+    collectionEff: "95.5%",
+    mtdRevenue: "₹3.6 Cr",
+    leaseExpiry90: 0,
+    efficiencyRating: "Silver",
+    waterRecycleRate: "78%",
+    solarOffset: "12%",
+    upcomingRenewals: [],
+    tenantMix: { "Co-working": 40, "BFSI": 30, "Retail": 10, "Law Firms": 10, "Vacant": 10 },
+    floors: [
+      { name: "Floor 1", tenants: "Starbucks, Crossword", gla: 49369, status: "Fully Leased" },
+      { name: "Floors 2-4", tenants: "The Executive Centre", gla: 200000, status: "Fully Leased" },
+      { name: "Floors 5-7", tenants: "Standard Chartered", gla: 150000, status: "Fully Leased" },
+      { name: "Floor 8", tenants: "Shardul Amarchand Mangaldas", gla: 50000, status: "Fully Leased" },
+      { name: "Floor 9", tenants: "Vacant", gla: 50000, status: "Vacant" }
+    ]
+  },
+  weikfield: {
+    propertyManager: "Sanjay Patil (Knight Frank)",
+    avgRent: "₹92 / sft",
+    collectionEff: "98.0%",
+    mtdRevenue: "₹10.1 Cr",
+    leaseExpiry90: 1,
+    efficiencyRating: "Gold",
+    waterRecycleRate: "88%",
+    solarOffset: "20%",
+    upcomingRenewals: [
+      { tenant: "Infosys", area: "2,00,000 sft", date: "30-Nov-2026", status: "Term Sheet Sent" }
+    ],
+    tenantMix: { "IT/ITeS": 50, "Engineering": 25, "F&B": 10, "BFSI": 10, "Vacant": 5 },
+    floors: [
+      { name: "Ground Block A/B", tenants: "CCD, Beer Cafe", gla: 102737, status: "Fully Leased" },
+      { name: "Block A (F1-F4)", tenants: "Infosys, Wipro", gla: 500000, status: "Fully Leased" },
+      { name: "Block B (F1-F3)", tenants: "Siemens, Emerson", gla: 300000, status: "Fully Leased" },
+      { name: "Block C (F1-F2)", tenants: "Deutsche Bank", gla: 150000, status: "Fully Leased" },
+      { name: "Block C (F3)", tenants: "Vacant", gla: 50000, status: "Vacant" }
+    ]
+  }
+};
+
+const ALERTS = [
+  { sev:'err', text:'HVAC Chiller-2 fault — COP below 3.0', asset:'MFAR', system:'BMS', time:'2m ago' },
+  { sev:'err', text:'Fire alarm panel comm failure — Block C', asset:'SPIC', system:'BMS', time:'8m ago' },
+  { sev:'warn', text:'DG Fuel level below 20% — Tank #3', asset:'ITPG', system:'BMS', time:'15m ago' },
+  { sev:'warn', text:'Water pressure drop OHT — Stack Lv4', asset:'Weikfield', system:'BMS', time:'22m ago' },
+  { sev:'warn', text:'AHU-14 supply temp deviation (+3.2°C)', asset:'MFAR', system:'BMS', time:'35m ago' },
+  { sev:'warn', text:'PPM overdue: Lift maintenance Block A', asset:'Vistas', system:'CAFM', time:'1h ago' },
+  { sev:'idle', text:'Monthly STP audit due in 3 days', asset:'ITPG', system:'FMS', time:'2h ago' },
+  { sev:'warn', text:'IAQ CO₂ level above 800ppm — Floor 6', asset:'SPIC', system:'BMS', time:'2h ago' },
+  { sev:'idle', text:'New work permit request pending', asset:'Weikfield', system:'FMS', time:'3h ago' },
+  { sev:'err', text:'UPS Battery bank temp high (42°C)', asset:'MFAR', system:'BMS', time:'4h ago' },
+  { sev:'idle', text:'Quarterly EHS audit completed — 94%', asset:'ITPG', system:'FMS', time:'5h ago' },
+  { sev:'warn', text:'Transformer loading 87% — near limit', asset:'Weikfield', system:'BMS', time:'6h ago' },
+];
+
+const WORD_CLOUD_WORDS = [
+  {t:'Chiller Fault',s:22,c:C.danger}, {t:'AHU Filter',s:14,c:C.warning}, {t:'DG Low Fuel',s:16,c:C.warning},
+  {t:'Fire Panel',s:18,c:C.danger}, {t:'Lift Maintenance',s:12,c:C.idle}, {t:'UPS Overtemp',s:15,c:C.danger},
+  {t:'Water Pressure',s:13,c:C.warning}, {t:'CO₂ High',s:11,c:C.warning}, {t:'PPM Overdue',s:14,c:C.warning},
+  {t:'STP Blower',s:16,c:C.danger}, {t:'CCTV Offline',s:10,c:C.idle}, {t:'Transformer',s:13,c:C.warning},
+  {t:'Permit Pending',s:9,c:C.idle}, {t:'Sensor Drift',s:11,c:C.warning}, {t:'Valve Leak',s:12,c:C.danger},
+  {t:'Energy Spike',s:15,c:C.warning}, {t:'AMC Expiring',s:10,c:C.warning}, {t:'Work Order',s:9,c:C.idle},
+];
+
+/* ================================================================
+   STATE
+================================================================ */
+let selectedAsset = 'all';
+let charts = {};
+const initialized = new Set();
+
+function getAssets() {
+  if(selectedAsset==='all') return Object.values(ASSETS);
+  return ASSETS[selectedAsset] ? [ASSETS[selectedAsset]] : Object.values(ASSETS);
+}
+function avg(arr,fn){ return arr.length ? arr.reduce((s,a)=>s+fn(a),0)/arr.length : 0; }
+function sum(arr,fn){ return arr.reduce((s,a)=>s+fn(a),0); }
+
+/* ================================================================
+   CLOCK
+================================================================ */
+(function(){
+  const DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function tick(){
+    const now=new Date();
+    document.getElementById('live-clock').textContent=[now.getHours(),now.getMinutes(),now.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':');
+    document.getElementById('live-date').textContent=`${DAYS[now.getDay()]}, ${now.getDate()} ${MONTHS[now.getMonth()]} ${now.getFullYear()}`;
+  }
+  tick(); setInterval(tick,1000);
+})();
+
+/* ================================================================
+   SECTION SWITCHER
+================================================================ */
+function showSection(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(a=>a.classList.toggle('active', a.dataset && a.dataset.sec===id));
+  const sec=document.getElementById(id);
+  if(sec) sec.classList.add('active');
+  if(!initialized.has(id)){ setTimeout(()=>initSection(id),20); initialized.add(id); }
+  else { setTimeout(()=>{ Object.values(charts).forEach(ch=>{ if(ch.canvas?.closest('#'+id)){ ch.resize(); ch.update('none'); } }); },30); }
+}
+
+function initSection(id){
+  ({
+    'sec-bms': initBMS,
+    'sec-bms-cctv': initBMSCCTV,
+    'sec-fms': initFMS,
+    'sec-cafm': initCAFM,
+    'sec-portfolio': initPortfolio,
+  }[id]||(() => {}))();
+}
+
+function onAssetChange(val){
+  selectedAsset = val;
+  document.getElementById('sf-asset').textContent = val==='all' ? 'All India' : (ASSETS[val]?.name||val);
+  // Update tree active state
+  document.querySelectorAll('.tree-item.asset-item').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tree-all')?.classList.remove('active');
+  if(val==='all'){ document.getElementById('tree-all')?.classList.add('active'); }
+  else { document.querySelector(`.tree-item[data-asset="${val}"]`)?.classList.add('active'); }
+
+  // Seamless update: update chart data in-place instead of destroying
+  const active = document.querySelector('.section.active');
+  if(active && initialized.has(active.id)){
+    updateSectionData(active.id);
+  } else if(active){
+    // Section was never initialized, do full init
+    initialized.clear();
+    Object.keys(charts).forEach(k=>{ if(charts[k]) charts[k].destroy(); });
+    charts={};
+    setTimeout(()=>{ initSection(active.id); initialized.add(active.id); },20);
+  }
+  // Mark other sections as needing re-init on next visit
+  initialized.forEach(id => { if(id !== active?.id) initialized.delete(id); });
+}
+
+/* Seamless data update — morphs existing charts instead of destroy/rebuild */
+function updateSectionData(sectionId){
+  const updaters = {
+    'sec-bms': updateBMS,
+    'sec-fms': updateFMS,
+    'sec-cafm': updateCAFM,
+    'sec-portfolio': updatePortfolio,
+  };
+  (updaters[sectionId] || (() => {}))();
+}
+
+/* ================================================================
+   BMS IN-PLACE UPDATE
+================================================================ */
+function updateBMS(){
+  const assets = getAssets();
+  const epi = avg(assets,a=>a.bms.epi).toFixed(0);
+  const wci = avg(assets,a=>a.bms.wci).toFixed(3);
+  const pf  = avg(assets,a=>a.bms.pf).toFixed(2);
+  const cop = avg(assets,a=>a.bms.cop).toFixed(1);
+  const carbon = sum(assets,a=>a.bms.carbon);
+  const uptime = avg(assets,a=>a.bms.uptime).toFixed(1);
+  const iaq = avg(assets,a=>a.bms.iaq).toFixed(0);
+
+  // Update KPI strip text
+  const kpis = document.querySelectorAll('#bms-kpi-strip .kpi');
+  if(kpis.length >= 6){
+    kpis[0].querySelector('.kpi-val').textContent = epi;
+    kpis[0].querySelector('.kpi-sub').textContent = 'Target: < 130';
+    kpis[1].querySelector('.kpi-val').textContent = wci;
+    kpis[2].querySelector('.kpi-val').textContent = pf;
+    kpis[3].querySelector('.kpi-val').textContent = cop;
+    kpis[4].querySelector('.kpi-val').textContent = uptime + '%';
+    kpis[5].querySelector('.kpi-val').textContent = fmtNum(carbon);
+  }
+
+  // Update Energy Trend chart data
+  if(charts.bmsEnergy){
+    const datasets = assets.map((a,i)=>({ label:a.name, data:a.bms.energyTrend, borderColor:[C.primary,C.success,C.purple,C.warning,C.teal][i], borderWidth:2, tension:.3, pointRadius:0, fill:false }));
+    charts.bmsEnergy.data.datasets = datasets;
+    charts.bmsEnergy.update();
+  }
+
+  // Update Utility Pie
+  if(charts.bmsUtil){
+    const mix = { EB:avg(assets,a=>a.bms.utilMix.eb), DG:avg(assets,a=>a.bms.utilMix.dg), Solar:avg(assets,a=>a.bms.utilMix.solar), Water:avg(assets,a=>a.bms.utilMix.water), Waste:avg(assets,a=>a.bms.utilMix.waste) };
+    charts.bmsUtil.data.datasets[0].data = Object.values(mix).map(v=>+v.toFixed(1));
+    charts.bmsUtil.update();
+  }
+
+  // Update AQI Gauge
+  if(charts.bmsAqi){
+    charts.bmsAqi.data.datasets[0].data = [+iaq, 200-(+iaq)];
+    charts.bmsAqi.data.datasets[0].backgroundColor = [+iaq<50?C.success:+iaq<100?C.warning:C.danger, '#F1F5F9'];
+    charts.bmsAqi.update();
+  }
+  document.getElementById('bms-aqi-val').textContent = iaq;
+
+  // Update Efficiency Metrics (static content — use innerHTML)
+  const segr = avg(assets,a=>a.bms.segr).toFixed(2);
+  const ikwtr = avg(assets,a=>a.bms.ikwtr).toFixed(2);
+  const txEff = avg(assets,a=>a.bms.txEff).toFixed(1);
+  const wastePSF = avg(assets,a=>a.bms.wastePSF).toFixed(2);
+  document.getElementById('bms-efficiency-metrics').innerHTML = `
+    <div class="metric-row" onclick="openKPIModal('COP','Chiller Plant COP','${cop}','Tracks coefficient of performance for major HVAC plants.',event)"><div class="metric-meta"><span>COP — Chiller Plant Avg</span><span style="font-weight:700">${cop} <span style="font-size:9px;color:var(--c-success)">▲ Target 5.0</span></span></div></div>
+    <div class="metric-row" onclick="openChartModal('Asset Efficiency','Specific Energy Consumption Rate (SEGR)','Detailed breakdown of daily SEGR values showing relative efficiency spikes.',event)"><div class="metric-meta"><span>SEGR — Specific Energy</span><span style="font-weight:700">${segr}</span></div><div class="bar-track"><div class="bar-fill g" style="width:${segr*100}%"></div></div></div>
+    <div class="metric-row" onclick="openKPIModal('EPI','Energy Performance Index','${epi} kWh/sqft','EPI measures overall building energy consumption footprint.',event)"><div class="metric-meta"><span>EPI — Energy Per Capita</span><span style="font-weight:700">${epi} kWh/sqft</span></div><div class="bar-track"><div class="bar-fill b" style="width:${Math.min(epi/2,100)}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Asset Efficiency','Transformer Efficiency','Loading status and operational efficiency of high-tension transformer incomers.',event)"><div class="metric-meta"><span>Transformer Efficiency</span><span style="font-weight:700">${txEff}%</span></div><div class="bar-track"><div class="bar-fill g" style="width:${txEff}%"></div></div></div>
+    <div class="metric-row" onclick="openKPIModal('COP','Chiller IKW/TR','${ikwtr}','Input power per unit refrigeration output. Lower is more efficient.',event)"><div class="metric-meta"><span>Chiller IKW/TR</span><span style="font-weight:700">${ikwtr}</span></div><div class="bar-track"><div class="bar-fill g" style="width:${(1-ikwtr)*200}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Asset Efficiency','Waste PSF','Waste generation per square foot normalized per occupant.',event)"><div class="metric-meta"><span>Waste PSF (MTD)</span><span style="font-weight:700">${wastePSF} kg/sft</span></div><div class="bar-track"><div class="bar-fill b" style="width:${wastePSF*200}%"></div></div></div>
+  `;
+}
+
+/* ================================================================
+   FMS IN-PLACE UPDATE
+================================================================ */
+function updateFMS(){
+  const assets = getAssets();
+  const sla = avg(assets,a=>a.fms.sla).toFixed(1);
+  const ppm = avg(assets,a=>a.fms.ppm).toFixed(1);
+  const openWo = sum(assets,a=>a.fms.openWo);
+  const closedWo = sum(assets,a=>a.fms.closedWo);
+  const wipWo = sum(assets,a=>a.fms.wipWo);
+  const incidents = sum(assets,a=>a.fms.incidents);
+  const trainingHrs = sum(assets,a=>a.fms.trainingHrs);
+  const auditScore = avg(assets,a=>a.fms.auditScore).toFixed(0);
+
+  // Update KPI strip text
+  const kpis = document.querySelectorAll('#fms-kpi-strip .kpi');
+  if(kpis.length >= 6){
+    kpis[0].querySelector('.kpi-val').textContent = sla + '%';
+    kpis[1].querySelector('.kpi-val').textContent = ppm + '%';
+    kpis[2].querySelector('.kpi-val').textContent = openWo;
+    kpis[2].querySelector('.kpi-sub').textContent = wipWo + ' In Progress';
+    kpis[3].querySelector('.kpi-val').textContent = incidents;
+    kpis[4].querySelector('.kpi-val').textContent = fmtNum(trainingHrs);
+    kpis[5].querySelector('.kpi-val').textContent = auditScore + '%';
+  }
+
+  // Update SLA chart
+  if(charts.fmsSla){
+    const slaDS = assets.map((a,i)=>({label:a.name+' SLA',data:a.fms.slaTrend,borderColor:[C.primary,C.success,C.purple,C.warning,C.teal][i],borderWidth:2,tension:.3,pointRadius:2}));
+    slaDS.push({label:'SLA Target (95%)',data:Array(12).fill(95),borderColor:C.danger,borderDash:[5,4],borderWidth:1.5,pointRadius:0});
+    charts.fmsSla.data.datasets = slaDS;
+    charts.fmsSla.update();
+  }
+
+  // Update WO donut
+  if(charts.fmsWo){
+    charts.fmsWo.data.datasets[0].data = [closedWo, wipWo, openWo];
+    charts.fmsWo.update();
+  }
+
+  // Update EHS bar
+  if(charts.fmsEhs){
+    charts.fmsEhs.data.labels = assets.map(a=>a.name);
+    charts.fmsEhs.data.datasets[0].data = assets.map(a=>a.fms.trainingHrs);
+    charts.fmsEhs.data.datasets[1].data = assets.map(a=>a.fms.corrActions);
+    charts.fmsEhs.update();
+  }
+
+  // Refresh tables and metrics (lightweight innerHTML updates)
+  const kpiData=[
+    ['Response Time','< 15 min','12 min','ok'], ['Equipment Uptime','> 98%',avg(assets,a=>a.bms.uptime).toFixed(1)+'%','ok'],
+    ['Cost Efficiency','< ₹12/sqft','₹11.4/sqft','ok'], ['CSAT Score','> 4.0','4.3','ok'],
+    ['SLA Weighted','≥ 95%',sla+'%',+sla>=95?'ok':'warn'], ['PPM Compliance','≥ 90%',ppm+'%',+ppm>=90?'ok':'warn'],
+    ['Corr. Actions','≥ 85%',avg(assets,a=>a.fms.corrActions).toFixed(0)+'%','ok'], ['NPS','> 60','65','ok'],
+  ];
+  document.querySelector('#fms-kpi-table tbody').innerHTML = kpiData.map(r=>`<tr onclick="openKPIModal('${r[0]}', 'Performance KPI', '${r[2]}', 'Detailed tracking of ${r[0]} KPI against the target of ${r[1]} across all operational sites.', event)"><td style="font-weight:600">${r[0]}</td><td>${r[1]}</td><td style="font-weight:700">${r[2]}</td><td><span class="badge ${r[3]}">${r[3]==='ok'?'Green':'Amber'}</span></td></tr>`).join('');
+
+  // Alerts
+  const filtered = ALERTS.filter(a=>a.system==='FMS'||a.system==='BMS');
+  document.getElementById('fms-alert-badge').textContent = filtered.filter(a=>a.sev!=='idle').length+' Open';
+  document.getElementById('fms-alerts-list').innerHTML = filtered.slice(0,8).map(a=>`
+    <div class="eq-row" onclick="openAlertDetailModal('${a.text.replace(/'/g, "\\'")}', '${a.asset}', '${a.system}', '${a.time}', '${a.sev}')" style="border-left:3px solid var(--c-${a.sev==='err'?'danger':a.sev==='warn'?'warning':'idle'});">
+      <div class="eq-info"><span class="eq-name">${a.text}</span><span class="eq-meta">${a.asset} · ${a.system} · ${a.time}</span></div>
+      <span class="badge ${a.sev}">${a.sev==='err'?'Critical':a.sev==='warn'?'Warning':'Info'}</span>
+    </div>`).join('');
+}
+
+/* ================================================================
+   CAFM IN-PLACE UPDATE
+================================================================ */
+function updateCAFM(){
+  const assets = getAssets();
+  const totalActive = sum(assets,a=>a.cafm.active);
+  const totalFault = sum(assets,a=>a.cafm.fault);
+  const totalOffline = sum(assets,a=>a.cafm.offline);
+  const avgCheck = avg(assets,a=>a.cafm.checkDaily).toFixed(0);
+  const totalOpen = sum(assets,a=>a.cafm.openTix);
+  const totalClosed = sum(assets,a=>a.cafm.closedTix);
+  const totalWip = sum(assets,a=>a.cafm.wipTix);
+
+  // Update KPI strip text
+  const kpis = document.querySelectorAll('#cafm-kpi-strip .kpi');
+  if(kpis.length >= 5){
+    kpis[0].querySelector('.kpi-val').textContent = fmtNum(totalActive);
+    kpis[0].querySelector('.kpi-sub').textContent = totalFault + ' fault · ' + totalOffline + ' offline';
+    kpis[1].querySelector('.kpi-val').textContent = sum(assets,a=>a.cafm.amcActive);
+    kpis[1].querySelector('.kpi-sub').textContent = sum(assets,a=>a.cafm.amcExpiring) + ' Expiring Soon';
+    kpis[2].querySelector('.kpi-val').textContent = avgCheck + '%';
+    kpis[3].querySelector('.kpi-val').textContent = totalOpen;
+    kpis[3].querySelector('.kpi-sub').textContent = totalWip + ' In Progress';
+    kpis[4].querySelector('.kpi-val').textContent = avg(assets,a=>a.cafm.vendorOtd).toFixed(0) + '%';
+  }
+
+  // Update Tickets donut
+  if(charts.cafmTix){
+    charts.cafmTix.data.datasets[0].data = [totalClosed, totalWip, totalOpen];
+    charts.cafmTix.update();
+  }
+
+  // Update PPM bar
+  if(charts.cafmPpm){
+    charts.cafmPpm.data.labels = assets.map(a=>a.name);
+    charts.cafmPpm.data.datasets[0].data = assets.map(a=>a.cafm.checkDaily);
+    charts.cafmPpm.data.datasets[1].data = assets.map(a=>a.cafm.checkWeekly);
+    charts.cafmPpm.data.datasets[2].data = assets.map(a=>a.cafm.checkMonthly);
+    charts.cafmPpm.update();
+  }
+
+  // Update Vendor bar
+  if(charts.cafmVendor){
+    charts.cafmVendor.data.labels = assets.map(a=>a.name);
+    charts.cafmVendor.data.datasets[0].data = assets.map(a=>a.cafm.vendorOtd);
+    charts.cafmVendor.data.datasets[1].data = assets.map(a=>a.cafm.vendorQuality);
+    charts.cafmVendor.update();
+  }
+
+  // Refresh checklist metrics and AMC table
+  document.getElementById('cafm-checklist-metrics').innerHTML = `
+    <div class="metric-row" onclick="openChartModal('Daily Checklist','Inspection completion rate','Tracks status of all mandatory engineering and facility checks logged daily.',event)"><div class="metric-meta"><span>Daily Checklist Compliance</span><span style="font-weight:700">${avgCheck}%</span></div><div class="bar-track"><div class="bar-fill g" style="width:${avgCheck}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Weekly Checklist','Weekly checks compliance','Tracks compliance for scheduled weekly preventive actions.',event)"><div class="metric-meta"><span>Weekly Checklist Compliance</span><span style="font-weight:700">${avg(assets,a=>a.cafm.checkWeekly).toFixed(0)}%</span></div><div class="bar-track"><div class="bar-fill b" style="width:${avg(assets,a=>a.cafm.checkWeekly)}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Monthly Checklist','Monthly checks compliance','Tracks long-term preventative check completion rates.',event)"><div class="metric-meta"><span>Monthly Checklist Compliance</span><span style="font-weight:700">${avg(assets,a=>a.cafm.checkMonthly).toFixed(0)}%</span></div><div class="bar-track"><div class="bar-fill p" style="width:${avg(assets,a=>a.cafm.checkMonthly)}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('PPM Scans','QR Scan Compliance','Logs count of assets scanned during checklist walks using QR code tags.',event)"><div class="metric-meta"><span>QR-Based PPM Scans (MTD)</span><span style="font-weight:700">${fmtNum(totalActive*2)}</span></div><div class="bar-track"><div class="bar-fill t" style="width:78%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Workbook Tasks','Workbook Checklist status','Tracks status of items in the technician digital workbooks.',event)"><div class="metric-meta"><span>Digital Workbook Tasks</span><span style="font-weight:700">${fmtNum(Math.floor(totalActive*0.3))}</span></div><div class="bar-track"><div class="bar-fill b" style="width:72%"></div></div></div>
+  `;
+  document.querySelector('#cafm-amc-table tbody').innerHTML = assets.map(a=>`<tr onclick="openAMCDetailModal('${a.name}', '${a.cafm.amcActive}', '${a.cafm.amcExpiring}', '${a.cafm.vendorOtd}')"><td style="font-weight:600">${a.name}</td><td>${a.cafm.amcActive}</td><td style="color:var(--c-warning)">${a.cafm.amcExpiring}</td><td>${a.cafm.vendorOtd}%</td><td><span class="badge ${a.cafm.amcExpiring>2?'warn':'ok'}">${a.cafm.amcExpiring>2?'Review':'OK'}</span></td></tr>`).join('');
+}
+
+/* ================================================================
+   PORTFOLIO IN-PLACE UPDATE
+================================================================ */
+/* ================================================================
+   PORTFOLIO IN-PLACE UPDATE & RENDER
+================================================================ */
+function updatePortfolio(){
+  renderPortfolio();
+}
+
+function renderPortfolio(){
+  const assets = getAssets();
+  const totalGLA = sum(assets, a => a.gla);
+  const totalBU = sum(assets, a => a.bu);
+  
+  const sec = document.getElementById('sec-portfolio');
+  if (selectedAsset === 'all') {
+    if (sec) sec.classList.remove('single-view');
+  } else {
+    if (sec) sec.classList.add('single-view');
+  }
+
+  // Populate KPI strip if empty
+  const strip = document.getElementById('portfolio-kpi-strip');
+  if (strip && strip.children.length === 0) {
+    strip.innerHTML = `
+      <div class="kpi" onclick="openKPIModal('Total GLA','Total Leasable Area','57,31,904 sft','Total gross leasable area across all operational assets.',event)">
+        <div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Total GLA</span>
+          <span class="kpi-val">—</span>
+          <span class="kpi-sub">—</span>
+        </div>
+      </div>
+      <div class="kpi" onclick="openKPIModal('Billing Units','Active Utility Accounts','13 BUs','Tracks total active billing connections from electricity and water boards.',event)">
+        <div class="kpi-ico t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M12 7V3M8 7V5M16 7V5"/></svg></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Billing Units</span>
+          <span class="kpi-val">—</span>
+          <span class="kpi-sub">—</span>
+        </div>
+      </div>
+      <div class="kpi" onclick="openKPIModal('Occupancy','Portfolio Occupancy','92%','Weighted average occupancy across all premium commercial office spaces.',event)">
+        <div class="kpi-ico g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Occupancy</span>
+          <span class="kpi-val">—</span>
+          <span class="kpi-sub">—</span>
+        </div>
+      </div>
+      <div class="kpi" onclick="openKPIModal('CSAT / NPS','Tenant Experience Score','4.3 / 5','CSAT and Net Promoter Score (NPS) collected quarterly from building occupants.',event)">
+        <div class="kpi-ico p"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">CSAT / NPS</span>
+          <span class="kpi-val">—</span>
+          <span class="kpi-sub">—</span>
+        </div>
+      </div>
+      <div class="kpi" onclick="openKPIModal('Active Alerts','System Faults','7 Active','Active incidents across BMS, facility maintenance, and gate access systems.',event)">
+        <div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+        <div class="kpi-body">
+          <span class="kpi-lbl">Active Alerts</span>
+          <span class="kpi-val">—</span>
+          <span class="kpi-sub">—</span>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Update KPI strip text
+  const kpis = document.querySelectorAll('#portfolio-kpi-strip .kpi');
+  if(kpis.length >= 5){
+    kpis[0].querySelector('.kpi-val').innerHTML = fmtNum(totalGLA) + '<span style="font-size:11px;font-weight:500"> sft</span>';
+    kpis[0].querySelector('.kpi-sub').textContent = selectedAsset === 'all' ? assets.length + ' Assets' : 'Single Asset';
+    
+    kpis[1].querySelector('.kpi-val').innerHTML = totalBU + (selectedAsset === 'all' ? '<span style="font-size:11px;font-weight:500"> + 1 tent.</span>' : '');
+    kpis[1].querySelector('.kpi-sub').textContent = selectedAsset === 'all' ? '12 confirmed' : 'Billing Units';
+    
+    const occVal = selectedAsset === 'all' ? '92%' : '94%';
+    kpis[2].querySelector('.kpi-val').textContent = occVal;
+    kpis[2].querySelector('.kpi-sub').textContent = selectedAsset === 'all' ? '+2% vs LQ' : 'Average Occupancy';
+    
+    const csatVal = selectedAsset === 'all' ? '4.3' : '4.5';
+    kpis[3].querySelector('.kpi-val').innerHTML = csatVal + '<span style="font-size:11px;font-weight:500"> / 5</span>';
+    kpis[3].querySelector('.kpi-sub').textContent = selectedAsset === 'all' ? 'NPS: 65' : 'NPS: 72';
+    
+    const activeAlerts = ALERTS.filter(a => (selectedAsset === 'all' ? true : a.asset.toLowerCase() === selectedAsset.toLowerCase()) && a.sev !== 'idle').length;
+    kpis[4].querySelector('.kpi-val').textContent = activeAlerts;
+    kpis[4].querySelector('.kpi-sub').textContent = activeAlerts + ' Active';
+  }
+
+  const allCards = [
+    document.getElementById('card-port-assets'),
+    document.getElementById('card-port-finance'),
+    document.getElementById('card-port-gla'),
+    document.getElementById('card-port-occ'),
+    document.getElementById('card-port-leases'),
+    document.getElementById('card-port-table')
+  ];
+
+  const singleCards = [
+    document.getElementById('card-port-single-hdr'),
+    document.getElementById('card-single-tenant-mix'),
+    document.getElementById('card-single-renewals'),
+    document.getElementById('card-single-operational'),
+    document.getElementById('card-single-floors')
+  ];
+
+  if (selectedAsset === 'all') {
+    // Show Portfolio-wide cards, hide single-asset cards
+    allCards.forEach(c => { if (c) c.style.display = 'flex'; });
+    singleCards.forEach(c => { if (c) c.style.display = 'none'; });
+
+    // Destroy single asset chart if exists
+    if (charts.portSingleTenant) {
+      charts.portSingleTenant.destroy();
+      charts.portSingleTenant = null;
+    }
+
+    // Render GLA Pie
+    const ctx1 = document.getElementById('chart-port-gla')?.getContext('2d');
+    if (ctx1) {
+      if (charts.portGla) {
+        charts.portGla.data.labels = Object.values(ASSETS).map(a => a.name);
+        charts.portGla.data.datasets[0].data = Object.values(ASSETS).map(a => a.gla);
+        charts.portGla.update();
+      } else {
+        charts.portGla = new Chart(ctx1, {
+          type: 'doughnut',
+          data: {
+            labels: Object.values(ASSETS).map(a => a.name),
+            datasets: [{
+              data: Object.values(ASSETS).map(a => a.gla),
+              backgroundColor: [C.primary, C.success, C.purple, C.warning, C.teal],
+              borderColor: '#fff',
+              borderWidth: 2
+            }]
+          },
+          options: {
+            cutout: '50%',
+            plugins: {
+              legend: { display: true, position: 'right', labels: { font: { size: 9 }, boxWidth: 10, padding: 6 } },
+              tooltip: { ...TT, callbacks: { label: c => ` ${c.label}: ${fmtGLA(c.parsed)} sft` } }
+            }
+          }
+        });
+      }
+    }
+
+    // Render Occupancy Trend
+    const ctx2 = document.getElementById('chart-port-occ')?.getContext('2d');
+    if (ctx2) {
+      if (charts.portOcc) {
+        charts.portOcc.update();
+      } else {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+        charts.portOcc = new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: months,
+            datasets: [
+              { label: 'Occupancy %', data: [88, 89, 91, 90, 92, 93], backgroundColor: C.primary + '55', borderColor: C.primary, borderWidth: 1, borderRadius: 3 },
+              { label: 'NPS', data: [62, 64, 61, 66, 65, 68], type: 'line', borderColor: C.success, borderWidth: 2, tension: .3, pointRadius: 3, yAxisID: 'y1' }
+            ]
+          },
+          options: {
+            scales: {
+              x: { grid: { display: false } },
+              y: { min: 80, max: 100, grid: { color: C.grid }, title: { display: true, text: 'Occupancy %', font: { size: 9 } } },
+              y1: { position: 'right', min: 50, max: 80, grid: { display: false }, title: { display: true, text: 'NPS', font: { size: 9 } } }
+            },
+            plugins: {
+              legend: { display: true, position: 'top', labels: { font: { size: 9 }, boxWidth: 10 } },
+              tooltip: { ...TT }
+            }
+          }
+        });
+      }
+    }
+
+    // Refresh asset cards grid
+    document.getElementById('portfolio-asset-grid').innerHTML = Object.values(ASSETS).map(a => {
+      const assetKey = Object.keys(ASSETS).find(k => ASSETS[k] === a);
+      return `
+        <div class="asset-card ${a.tentative ? 'tentative' : ''}" data-asset="${assetKey}" onclick="onAssetChange('${assetKey}')">
+          <div class="ac-name">${a.name} ${a.tentative ? '<span class="badge idle" style="font-size:7px;padding:1px 4px">+1 TBD</span>' : ''}</div>
+          <div class="ac-spv">${a.spv} · ${a.city}, ${a.state}</div>
+          <div class="ac-stats">
+            <div class="ac-stat"><span class="ac-stat-val">${fmtGLA(a.gla)}</span><span class="ac-stat-lbl">sft GLA</span></div>
+            <div class="ac-stat"><span class="ac-stat-val">${a.bu}</span><span class="ac-stat-lbl">BU</span></div>
+            <div class="ac-stat"><span class="ac-stat-val">${a.bms.uptime}%</span><span class="ac-stat-lbl">Uptime</span></div>
+          </div>
+        </div>`;
+    }).join('');
+
+    // Refresh Consolidated Portfolio Operations Table
+    const tableBody = document.querySelector('#portfolio-operations-table tbody');
+    if (tableBody) {
+      tableBody.innerHTML = Object.entries(ASSETS).map(([key, a]) => {
+        const details = ASSET_DETAILS[key] || { avgRent: "—", collectionEff: "—", efficiencyRating: "—" };
+        const openIncidents = ALERTS.filter(al => al.asset.toLowerCase() === key.toLowerCase() && al.sev !== 'idle').length;
+        const alertBadge = openIncidents > 0 
+          ? `<span class="badge warn">${openIncidents} Active</span>` 
+          : `<span class="badge ok">Clear</span>`;
+
+        return `
+          <tr onclick="onAssetChange('${key}')" style="cursor:pointer">
+            <td style="font-weight:700">${a.name}</td>
+            <td>${a.region}</td>
+            <td>${a.city}</td>
+            <td style="font-variant-numeric: tabular-nums;">${fmtNum(a.gla)} sft</td>
+            <td style="font-weight:600">${key === 'vistas' ? '90%' : '93%'}</td>
+            <td style="font-variant-numeric: tabular-nums;">${details.collectionEff}</td>
+            <td>${a.bms.uptime}%</td>
+            <td><span class="badge ok" style="background:#0D948815; color:#0D9488; border: 1px solid #0D948830">${details.efficiencyRating}</span></td>
+            <td>${alertBadge}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+  } else {
+    // Show single-asset cards, hide portfolio-wide cards
+    allCards.forEach(c => { if (c) c.style.display = 'none'; });
+    singleCards.forEach(c => { if (c) c.style.display = 'flex'; });
+
+    // Destroy portfolio wide charts if they exist
+    if (charts.portGla) { charts.portGla.destroy(); charts.portGla = null; }
+    if (charts.portOcc) { charts.portOcc.destroy(); charts.portOcc = null; }
+
+    const assetData = ASSETS[selectedAsset];
+    const details = ASSET_DETAILS[selectedAsset] || { propertyManager: "N/A", tenantMix: { "Vacant": 100 }, floors: [] };
+
+    document.getElementById('single-asset-name').textContent = `${assetData.name} Deep Dive`;
+    document.getElementById('single-asset-meta').textContent = `${assetData.spv} · ${assetData.city}, ${assetData.state} · Property Manager: ${details.propertyManager}`;
+
+    // Render localized details in Header
+    document.getElementById('single-stat-rent').textContent = details.avgRent;
+    document.getElementById('single-stat-coll').textContent = details.collectionEff;
+    document.getElementById('single-stat-rev').textContent = details.mtdRevenue;
+    document.getElementById('single-stat-esg').textContent = details.efficiencyRating;
+
+    // Render floor table
+    document.querySelector('#single-floors-table tbody').innerHTML = details.floors.map(f => `
+      <tr>
+        <td style="font-weight: 600;">${f.name}</td>
+        <td>${f.tenants}</td>
+        <td style="font-variant-numeric: tabular-nums;">${fmtNum(f.gla)}</td>
+        <td><span class="badge ${f.status === 'Fully Leased' ? 'ok' : 'warn'}">${f.status}</span></td>
+      </tr>
+    `).join('');
+
+    // Render renewals table
+    const renewalsBody = document.querySelector('#single-renewals-table tbody');
+    if (renewalsBody) {
+      if (!details.upcomingRenewals || details.upcomingRenewals.length === 0) {
+        renewalsBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--c-txt3); padding: 12px 0;">No renewals in < 180 Days</td></tr>`;
+      } else {
+        renewalsBody.innerHTML = details.upcomingRenewals.map(r => `
+          <tr>
+            <td style="font-weight: 600;">${r.tenant}</td>
+            <td>${r.area}</td>
+            <td>${r.date}</td>
+            <td><span class="badge ${r.status.includes('Signed') ? 'ok' : 'warn'}">${r.status}</span></td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    // Render operational details stack
+    const opStack = document.getElementById('single-operational-stack');
+    if (opStack) {
+      opStack.innerHTML = `
+        <div class="metric-row" style="margin-bottom:6px;"><div class="metric-meta"><span>Equipment Uptime Rating</span><span style="font-weight:700">${assetData.bms.uptime}%</span></div></div>
+        <div class="metric-row" style="margin-bottom:6px;"><div class="metric-meta"><span>Preventive Compliance (PPM)</span><span style="font-weight:700">${assetData.fms.ppm}%</span></div></div>
+        <div class="metric-row" style="margin-bottom:6px;"><div class="metric-meta"><span>Active Helpdesk Tickets</span><span style="font-weight:700">${assetData.cafm.openTix} Open / ${assetData.cafm.wipTix} WIP</span></div></div>
+        <div class="metric-row" style="margin-bottom:6px;"><div class="metric-meta"><span>Building EPI Performance</span><span style="font-weight:700">${assetData.bms.epi} kWh/sqft</span></div></div>
+        <div class="metric-row" style="margin-bottom:6px;"><div class="metric-meta"><span>Water Recycling Index</span><span style="font-weight:700">${details.waterRecycleRate} STP</span></div></div>
+        <div class="metric-row"><div class="metric-meta"><span>On-Site Solar Offset</span><span style="font-weight:700; color:var(--c-success)">${details.solarOffset}</span></div></div>
+      `;
+    }
+
+    // Render Stacked Tenant Mix chart
+    const ctxTenant = document.getElementById('chart-single-tenant-mix')?.getContext('2d');
+    if (ctxTenant) {
+      const labels = Object.keys(details.tenantMix);
+      const dataValues = Object.values(details.tenantMix);
+      const backgroundColors = [C.primary, C.success, C.purple, C.warning, C.idle];
+
+      if (charts.portSingleTenant) {
+        charts.portSingleTenant.destroy();
+      }
+
+      charts.portSingleTenant = new Chart(ctxTenant, {
+        type: 'bar',
+        data: {
+          labels: ['Lease Stack %'],
+          datasets: labels.map((label, idx) => ({
+            label: label,
+            data: [dataValues[idx]],
+            backgroundColor: backgroundColors[idx % backgroundColors.length],
+            borderRadius: 2
+          }))
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { stacked: true, max: 100, grid: { display: false }, ticks: { callback: v => v + '%' } },
+            y: { stacked: true, grid: { display: false } }
+          },
+          plugins: {
+            legend: { display: true, position: 'top', labels: { font: { size: 9 }, boxWidth: 10 } },
+            tooltip: { ...TT, callbacks: { label: c => ` ${c.dataset.label}: ${c.raw}%` } }
+          }
+        }
+      });
+    }
+  }
+}
+
+/* ================================================================
+   BMS SECTION
+================================================================ */
+function initBMS(){
+  const assets = getAssets();
+  const epi = avg(assets,a=>a.bms.epi).toFixed(0);
+  const wci = avg(assets,a=>a.bms.wci).toFixed(3);
+  const pf  = avg(assets,a=>a.bms.pf).toFixed(2);
+  const cop = avg(assets,a=>a.bms.cop).toFixed(1);
+  const carbon = sum(assets,a=>a.bms.carbon);
+  const uptime = avg(assets,a=>a.bms.uptime).toFixed(1);
+  const iaq = avg(assets,a=>a.bms.iaq).toFixed(0);
+
+  document.getElementById('bms-kpi-strip').innerHTML = `
+    <div class="kpi" onclick="openKPIModal('EPI','Energy Performance Index','${epi} kWh/sqft','Target: < 130 kWh/sqft. EPI measures total energy consumed per sqft GLA. Lower = better. Benchmark: IGBC Green ≤ 120.',event)"><div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">EPI (kWh/sqft)</span><span class="kpi-val">${epi}</span><span class="kpi-sub ${+epi<130?'ok':+epi<160?'warn':'bad'}">Target: < 130</span></div></div>
+    <div class="kpi" onclick="openKPIModal('WCI','Water Consumption Index','${wci} KL/sqft','Target: < 0.035 KL/sqft. WCI tracks water usage normalized by area. Includes domestic, HVAC makeup, irrigation. STP recycled water not counted.',event)"><div class="kpi-ico t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 11-11.31 0z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">WCI (KL/sqft)</span><span class="kpi-val">${wci}</span><span class="kpi-sub ${+wci<0.035?'ok':+wci<0.045?'warn':'bad'}">Target: < 0.035</span></div></div>
+    <div class="kpi" onclick="openKPIModal('Power Factor','Grid Power Factor','${pf}','Target: ≥ 0.95. Power Factor measures efficiency of electrical power usage. Below 0.90 incurs utility penalties. APFC panels auto-correct.',event)"><div class="kpi-ico g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Power Factor</span><span class="kpi-val">${pf}</span><span class="kpi-sub ${+pf>=0.95?'ok':'warn'}">Target: ≥ 0.95</span></div></div>
+    <div class="kpi" onclick="openKPIModal('COP','Chiller Plant COP','${cop}','Target: ≥ 5.0. COP (Coefficient of Performance) = Cooling output / Electrical input. Higher is better. Top-quartile CRE plants achieve 5.5+.',event)"><div class="kpi-ico p"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M12 7V3M8 7V5M16 7V5"/></svg></div><div class="kpi-body"><span class="kpi-lbl">COP (IKW/TR)</span><span class="kpi-val">${cop}</span><span class="kpi-sub ${+cop>=5?'ok':+cop>=4.5?'warn':'bad'}">Target: ≥ 5.0</span></div></div>
+    <div class="kpi" onclick="openKPIModal('Equipment Uptime','System Availability','${uptime}%','Target: > 98%. Tracks HVAC, electrical, plumbing, fire systems uptime. Excludes scheduled maintenance windows.',event)"><div class="kpi-ico g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Equip. Uptime</span><span class="kpi-val">${uptime}%</span><span class="kpi-sub ok">Target: > 98%</span></div></div>
+    <div class="kpi" onclick="openKPIModal('Carbon Footprint','Scope 1+2 Emissions','${fmtNum(carbon)} tCO₂','Total carbon equivalent from EB grid (Scope 2) + DG diesel (Scope 1). Solar offsets approx 18-25% depending on asset. -2.1% vs last month.',event)"><div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Carbon (tCO₂)</span><span class="kpi-val">${fmtNum(carbon)}</span><span class="kpi-sub ok">-2.1% vs LM</span></div></div>
+  `;
+
+  // Energy Trend
+  const days=Array.from({length:30},(_,i)=>`${i+1}`);
+  const datasets = assets.map((a,i)=>({ label:a.name, data:a.bms.energyTrend, borderColor:[C.primary,C.success,C.purple,C.warning,C.teal][i], borderWidth:2, tension:.3, pointRadius:0, fill:false }));
+  const ctx1=document.getElementById('chart-bms-energy')?.getContext('2d');
+  if(ctx1) charts.bmsEnergy=new Chart(ctx1,{type:'line',data:{labels:days,datasets},options:{scales:{x:{grid:{display:false},title:{display:true,text:'Day of Month',font:{size:9}}},y:{grid:{color:C.grid},ticks:{callback:v=>fmtNum(v)}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT,callbacks:{label:c=>` ${c.dataset.label}: ${fmtNum(c.parsed.y)} kWh`}}}}});
+
+  // Efficiency Metrics
+  const segr = avg(assets,a=>a.bms.segr).toFixed(2);
+  const ikwtr = avg(assets,a=>a.bms.ikwtr).toFixed(2);
+  const txEff = avg(assets,a=>a.bms.txEff).toFixed(1);
+  const wastePSF = avg(assets,a=>a.bms.wastePSF).toFixed(2);
+  document.getElementById('bms-efficiency-metrics').innerHTML = `
+    <div class="metric-row" onclick="openKPIModal('COP','Chiller Plant COP','${cop}','Tracks coefficient of performance for major HVAC plants.',event)"><div class="metric-meta"><span>COP — Chiller Plant Avg</span><span style="font-weight:700">${cop} <span style="font-size:9px;color:var(--c-success)">▲ Target 5.0</span></span></div></div>
+    <div class="metric-row" onclick="openChartModal('Asset Efficiency','Specific Energy Consumption Rate (SEGR)','Detailed breakdown of daily SEGR values showing relative efficiency spikes.',event)"><div class="metric-meta"><span>SEGR — Specific Energy</span><span style="font-weight:700">${segr}</span></div><div class="bar-track"><div class="bar-fill g" style="width:${segr*100}%"></div></div></div>
+    <div class="metric-row" onclick="openKPIModal('EPI','Energy Performance Index','${epi} kWh/sqft','EPI measures overall building energy consumption footprint.',event)"><div class="metric-meta"><span>EPI — Energy Per Capita</span><span style="font-weight:700">${epi} kWh/sqft</span></div><div class="bar-track"><div class="bar-fill b" style="width:${Math.min(epi/2,100)}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Asset Efficiency','Transformer Efficiency','Loading status and operational efficiency of high-tension transformer incomers.',event)"><div class="metric-meta"><span>Transformer Efficiency</span><span style="font-weight:700">${txEff}%</span></div><div class="bar-track"><div class="bar-fill g" style="width:${txEff}%"></div></div></div>
+    <div class="metric-row" onclick="openKPIModal('COP','Chiller IKW/TR','${ikwtr}','Input power per unit refrigeration output. Lower is more efficient.',event)"><div class="metric-meta"><span>Chiller IKW/TR</span><span style="font-weight:700">${ikwtr}</span></div><div class="bar-track"><div class="bar-fill g" style="width:${(1-ikwtr)*200}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Asset Efficiency','Waste PSF','Waste generation per square foot normalized per occupant.',event)"><div class="metric-meta"><span>Waste PSF (MTD)</span><span style="font-weight:700">${wastePSF} kg/sft</span></div><div class="bar-track"><div class="bar-fill b" style="width:${wastePSF*200}%"></div></div></div>
+  `;
+
+  // Utility Pie
+  const mix = { EB:avg(assets,a=>a.bms.utilMix.eb), DG:avg(assets,a=>a.bms.utilMix.dg), Solar:avg(assets,a=>a.bms.utilMix.solar), Water:avg(assets,a=>a.bms.utilMix.water), Waste:avg(assets,a=>a.bms.utilMix.waste) };
+  const ctx2=document.getElementById('chart-bms-utility')?.getContext('2d');
+  if(ctx2) charts.bmsUtil=new Chart(ctx2,{type:'doughnut',data:{labels:Object.keys(mix),datasets:[{data:Object.values(mix).map(v=>+v.toFixed(1)),backgroundColor:[C.primary,C.idle,C.success,C.teal,C.warning],borderColor:'#fff',borderWidth:2}]},options:{cutout:'55%',plugins:{legend:{display:true,position:'right',labels:{font:{size:9},boxWidth:10,padding:6}},tooltip:{...TT,callbacks:{label:c=>` ${c.label}: ${c.parsed}%`}}}}});
+
+  // AQI Gauge
+  const ctx3=document.getElementById('chart-bms-aqi')?.getContext('2d');
+  document.getElementById('bms-aqi-val').textContent = iaq;
+  if(ctx3) charts.bmsAqi=new Chart(ctx3,{type:'doughnut',data:{datasets:[{data:[iaq, 200-iaq],backgroundColor:[iaq<50?C.success:iaq<100?C.warning:C.danger, '#F1F5F9'],borderWidth:0}]},options:{cutout:'78%',rotation:225,circumference:270,plugins:{tooltip:{enabled:false}}}});
+
+  // Heatmap (rendered as grouped bar for simplicity with Chart.js)
+  const hours=['6am','8am','10am','12pm','2pm','4pm','6pm','8pm','10pm'];
+  const heatDays = ['Mon','Tue','Wed','Thu','Fri'];
+  const heatData = heatDays.map(d=>hours.map(()=>40+Math.floor(Math.random()*55)));
+  const ctx4=document.getElementById('chart-bms-heatmap')?.getContext('2d');
+  if(ctx4) charts.bmsHeat=new Chart(ctx4,{type:'bar',data:{labels:hours,datasets:heatDays.map((d,i)=>({label:d,data:heatData[i],backgroundColor:[C.primary,'#3B82F6','#60A5FA','#93C5FD','#BFDBFE'][i],borderRadius:2}))},options:{scales:{x:{grid:{display:false},stacked:false},y:{grid:{color:C.grid},max:100,title:{display:true,text:'Load %',font:{size:9}}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:8},boxWidth:8}},tooltip:{...TT}}}});
+
+  // Water Quality
+  document.getElementById('bms-water-params').innerHTML = `
+    <div class="eq-list">
+      <div class="eq-row" onclick="openWaterModal()"><div class="eq-info"><span class="eq-name">TDS</span><span class="eq-meta">Limit: <500 ppm</span></div><span style="font-size:13px;font-weight:700;color:var(--c-success)">320 ppm</span></div>
+      <div class="eq-row" onclick="openWaterModal()"><div class="eq-info"><span class="eq-name">pH Level</span><span class="eq-meta">Range: 6.5–8.5</span></div><span style="font-size:13px;font-weight:700;color:var(--c-success)">7.2</span></div>
+      <div class="eq-row" onclick="openWaterModal()"><div class="eq-info"><span class="eq-name">BOD (STP Out)</span><span class="eq-meta">CPCB: <10 mg/L</span></div><span style="font-size:13px;font-weight:700;color:var(--c-success)">8 mg/L</span></div>
+      <div class="eq-row" onclick="openWaterModal()"><div class="eq-info"><span class="eq-name">COD (STP Out)</span><span class="eq-meta">CPCB: <50 mg/L</span></div><span style="font-size:13px;font-weight:700;color:var(--c-success)">45 mg/L</span></div>
+      <div class="eq-row" onclick="openWaterModal()"><div class="eq-info"><span class="eq-name">TSS</span><span class="eq-meta">CPCB: <30 mg/L</span></div><span style="font-size:13px;font-weight:700;color:var(--c-success)">12 mg/L</span></div>
+      <div class="eq-row" onclick="openWaterModal()"><div class="eq-info"><span class="eq-name">Hardness (CT)</span><span class="eq-meta">Limit: <300 mg/L</span></div><span style="font-size:13px;font-weight:700;color:var(--c-warning)">265 mg/L</span></div>
+    </div>`;
+}
+
+/* ================================================================
+   FMS SECTION
+================================================================ */
+function initFMS(){
+  const assets = getAssets();
+  const sla = avg(assets,a=>a.fms.sla).toFixed(1);
+  const ppm = avg(assets,a=>a.fms.ppm).toFixed(1);
+  const openWo = sum(assets,a=>a.fms.openWo);
+  const closedWo = sum(assets,a=>a.fms.closedWo);
+  const wipWo = sum(assets,a=>a.fms.wipWo);
+  const incidents = sum(assets,a=>a.fms.incidents);
+  const trainingHrs = sum(assets,a=>a.fms.trainingHrs);
+  const auditScore = avg(assets,a=>a.fms.auditScore).toFixed(0);
+
+  document.getElementById('fms-kpi-strip').innerHTML = `
+    <div class="kpi" onclick="openKPIModal('SLA Score','FMS Service Level Agreement','${sla}%','Service Level Agreement compliance across engineering, housekeeping, and security contracts.',event)"><div class="kpi-ico g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div class="kpi-body"><span class="kpi-lbl">SLA Score</span><span class="kpi-val">${sla}%</span><span class="kpi-sub ${+sla>=95?'ok':'warn'}">Target: ≥ 95%</span></div></div>
+    <div class="kpi" onclick="openKPIModal('PPM Compliance','Preventive Maintenance Compliance','${ppm}%','Preventive Maintenance compliance rate for critical utilities and systems.',event)"><div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="kpi-body"><span class="kpi-lbl">PPM Compliance</span><span class="kpi-val">${ppm}%</span><span class="kpi-sub ${+ppm>=90?'ok':'warn'}">Target: ≥ 90%</span></div></div>
+    <div class="kpi" onclick="openWOModal()"><div class="kpi-ico w"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Open Work Orders</span><span class="kpi-val">${openWo}</span><span class="kpi-sub warn">${wipWo} In Progress</span></div></div>
+    <div class="kpi" onclick="openChartModal('Incidents','Safety Incidents MTD','${incidents} occurrences safety incident log. Tracks near misses and observations.',event)"><div class="kpi-ico r"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Incidents (MTD)</span><span class="kpi-val">${incidents}</span><span class="kpi-sub ${incidents<=5?'ok':'bad'}">Near Miss: ${sum(assets,a=>a.fms.nearMiss)}</span></div></div>
+    <div class="kpi" onclick="openChartModal('Training Hours','Safety Training Duration','Safety training hours delivered to engineering and soft services staff.',event)"><div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Training Hours</span><span class="kpi-val">${fmtNum(trainingHrs)}</span><span class="kpi-sub ok">Compliance OK</span></div></div>
+    <div class="kpi" onclick="openChartModal('Audit Score','Quarterly Audit Ratings','Tracks average performance score achieved in internal and external audits.',event)"><div class="kpi-ico g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Audit Score</span><span class="kpi-val">${auditScore}%</span><span class="kpi-sub ok">Target: ≥ 90%</span></div></div>
+  `;
+
+  // SLA & PPM Trend
+  const months=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'];
+  const slaDS=assets.map((a,i)=>({label:a.name+' SLA',data:a.fms.slaTrend,borderColor:[C.primary,C.success,C.purple,C.warning,C.teal][i],borderWidth:2,tension:.3,pointRadius:2}));
+  slaDS.push({label:'SLA Target (95%)',data:Array(12).fill(95),borderColor:C.danger,borderDash:[5,4],borderWidth:1.5,pointRadius:0});
+  const ctx1=document.getElementById('chart-fms-sla')?.getContext('2d');
+  if(ctx1) charts.fmsSla=new Chart(ctx1,{type:'line',data:{labels:months,datasets:slaDS},options:{scales:{x:{grid:{display:false}},y:{min:84,max:100,grid:{color:C.grid}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT}}}});
+
+  // Work Order Donut
+  const ctx2=document.getElementById('chart-fms-wo')?.getContext('2d');
+  if(ctx2) charts.fmsWo=new Chart(ctx2,{type:'doughnut',data:{labels:['Closed','In Progress','Open'],datasets:[{data:[closedWo,wipWo,openWo],backgroundColor:[C.success,C.primary,C.warning],borderColor:'#fff',borderWidth:2}]},options:{cutout:'55%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT}}}});
+
+  // EHS Bar
+  const ctx3=document.getElementById('chart-fms-ehs')?.getContext('2d');
+  if(ctx3) charts.fmsEhs=new Chart(ctx3,{type:'bar',data:{labels:assets.map(a=>a.name),datasets:[
+    {label:'Training Hrs',data:assets.map(a=>a.fms.trainingHrs),backgroundColor:C.primary+'99',borderRadius:3},
+    {label:'Corr. Actions %',data:assets.map(a=>a.fms.corrActions),backgroundColor:C.success+'99',borderRadius:3}
+  ]},options:{scales:{x:{grid:{display:false}},y:{grid:{color:C.grid}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT}}}});
+
+  // KPI Scorecard Table
+  const kpiData=[
+    ['Response Time','< 15 min','12 min','ok'], ['Equipment Uptime','> 98%',avg(assets,a=>a.bms.uptime).toFixed(1)+'%','ok'],
+    ['Cost Efficiency','< ₹12/sqft','₹11.4/sqft','ok'], ['CSAT Score','> 4.0','4.3','ok'],
+    ['SLA Weighted','≥ 95%',sla+'%',+sla>=95?'ok':'warn'], ['PPM Compliance','≥ 90%',ppm+'%',+ppm>=90?'ok':'warn'],
+    ['Corr. Actions','≥ 85%',avg(assets,a=>a.fms.corrActions).toFixed(0)+'%','ok'], ['NPS','> 60','65','ok'],
+  ];
+  document.querySelector('#fms-kpi-table tbody').innerHTML = kpiData.map(r=>`<tr onclick="openKPIModal('${r[0]}', 'Performance KPI', '${r[2]}', 'Detailed tracking of ${r[0]} KPI against the target of ${r[1]} across all operational sites.', event)"><td style="font-weight:600">${r[0]}</td><td>${r[1]}</td><td style="font-weight:700">${r[2]}</td><td><span class="badge ${r[3]}">${r[3]==='ok'?'Green':'Amber'}</span></td></tr>`).join('');
+
+  // Training Metrics
+  const trMetrics = document.getElementById('fms-training-metrics');
+  if (trMetrics) {
+    trMetrics.innerHTML = `
+      <div class="metric-row" onclick="openChartModal('Safety Training Hours','Operational Safety Training','Safety training hours logged for site employees and vendor partners.',event)"><div class="metric-meta"><span>Safety Training Hours (MTD)</span><span style="font-weight:700">${fmtNum(trainingHrs)} hrs</span></div><div class="bar-track"><div class="bar-fill g" style="width:${Math.min(trainingHrs/12,100)}%"></div></div></div>
+      <div class="metric-row" onclick="openChartModal('Corrective Actions Closed','EHS CAPA tracking','Closure rate of corrective and preventive actions logged during site inspections.',event)"><div class="metric-meta"><span>Corrective Actions Closed</span><span style="font-weight:700">${avg(assets,a=>a.fms.corrActions).toFixed(0)}%</span></div><div class="bar-track"><div class="bar-fill g" style="width:${avg(assets,a=>a.fms.corrActions)}%"></div></div></div>
+      <div class="metric-row" onclick="openChartModal('Audit Score','Safety & Operational Audits','Audit scores achieved across technical systems, safety practices, and compliance audits.',event)"><div class="metric-meta"><span>Audit Score (Avg)</span><span style="font-weight:700">${auditScore}%</span></div><div class="bar-track"><div class="bar-fill ${+auditScore>=90?'g':'w'}" style="width:${auditScore}%"></div></div></div>
+      <div class="metric-row" onclick="openChartModal('Safety Audits','Safety Inspections','Routine audits conducted by EHS leaders.',event)"><div class="metric-meta"><span>Safety Audits Done (MTD)</span><span style="font-weight:700">${assets.length*3}</span></div><div class="bar-track"><div class="bar-fill b" style="width:85%"></div></div></div>
+      <div class="metric-row" onclick="openChartModal('Near Miss Reports','Safety Near Miss Logs','Tracks incidents reported as near misses. Active tracking helps prevent major safety failures.',event)"><div class="metric-meta"><span>Near Miss Reports</span><span style="font-weight:700">${sum(assets,a=>a.fms.nearMiss)}</span></div><div class="bar-track"><div class="bar-fill w" style="width:${sum(assets,a=>a.fms.nearMiss)*5}%"></div></div></div>
+      <div class="metric-row" onclick="openChartModal('Unsafe Acts Reported','Safety Observations','Logs safety observations reported by site teams.',event)"><div class="metric-meta"><span>Unsafe Acts Reported</span><span style="font-weight:700">${sum(assets,a=>a.fms.unsafeActs)}</span></div><div class="bar-track"><div class="bar-fill r" style="width:${sum(assets,a=>a.fms.unsafeActs)*7}%"></div></div></div>
+    `;
+  }
+
+  // Alerts
+  const filtered = ALERTS.filter(a=>a.system==='FMS'||a.system==='BMS');
+  document.getElementById('fms-alert-badge').textContent = filtered.filter(a=>a.sev!=='idle').length+' Open';
+  document.getElementById('fms-alerts-list').innerHTML = filtered.slice(0,8).map(a=>`
+    <div class="eq-row" onclick="openAlertDetailModal('${a.text.replace(/'/g, "\\'")}', '${a.asset}', '${a.system}', '${a.time}', '${a.sev}')" style="border-left:3px solid var(--c-${a.sev==='err'?'danger':a.sev==='warn'?'warning':'idle'});">
+      <div class="eq-info"><span class="eq-name">${a.text}</span><span class="eq-meta">${a.asset} · ${a.system} · ${a.time}</span></div>
+      <span class="badge ${a.sev}">${a.sev==='err'?'Critical':a.sev==='warn'?'Warning':'Info'}</span>
+    </div>`).join('');
+}
+
+/* ================================================================
+   CAFM SECTION
+================================================================ */
+function initCAFM(){
+  const assets = getAssets();
+  const totalActive = sum(assets,a=>a.cafm.active);
+  const totalFault = sum(assets,a=>a.cafm.fault);
+  const totalOffline = sum(assets,a=>a.cafm.offline);
+  const avgCheck = avg(assets,a=>a.cafm.checkDaily).toFixed(0);
+  const totalOpen = sum(assets,a=>a.cafm.openTix);
+  const totalClosed = sum(assets,a=>a.cafm.closedTix);
+  const totalWip = sum(assets,a=>a.cafm.wipTix);
+
+  document.getElementById('cafm-kpi-strip').innerHTML = `
+    <div class="kpi" onclick="openChartModal('Active Assets','CAFM Asset Registry','Tracks all active assets under maintenance across engineering, plumbing, fire systems, security systems, and soft service domains.',event)"><div class="kpi-ico g"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.21 15.89A10 10 0 118 2.83"/><path d="M22 12A10 10 0 0012 2v10z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Active Assets</span><span class="kpi-val">${fmtNum(totalActive)}</span><span class="kpi-sub ok">${totalFault} fault · ${totalOffline} offline</span></div></div>
+    <div class="kpi" onclick="openChartModal('AMC Contracts','Annual Maintenance Contracts','Tracks active contracts and expiration alerts.',event)"><div class="kpi-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg></div><div class="kpi-body"><span class="kpi-lbl">AMC Active</span><span class="kpi-val">${sum(assets,a=>a.cafm.amcActive)}</span><span class="kpi-sub warn">${sum(assets,a=>a.cafm.amcExpiring)} Expiring Soon</span></div></div>
+    <div class="kpi" onclick="openChartModal('Checklist Compliance','Daily Checklist Completion','Daily technical checks completed.',event)"><div class="kpi-ico t"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Checklist (Daily)</span><span class="kpi-val">${avgCheck}%</span><span class="kpi-sub ok">Target: ≥ 90%</span></div></div>
+    <div class="kpi" onclick="openTicketModal()"><div class="kpi-ico w"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Open Tickets</span><span class="kpi-val">${totalOpen}</span><span class="kpi-sub warn">${totalWip} In Progress</span></div></div>
+    <div class="kpi" onclick="openChartModal('Vendor SLA','On-Time Delivery Performance','Tracks vendor service performance.',event)"><div class="kpi-ico p"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div><div class="kpi-body"><span class="kpi-lbl">Vendor OTD</span><span class="kpi-val">${avg(assets,a=>a.cafm.vendorOtd).toFixed(0)}%</span><span class="kpi-sub ok">Quality: ${avg(assets,a=>a.cafm.vendorQuality).toFixed(0)}%</span></div></div>
+  `;
+
+  // Tickets Donut
+  const ctx1=document.getElementById('chart-cafm-tickets')?.getContext('2d');
+  if(ctx1) charts.cafmTix=new Chart(ctx1,{type:'doughnut',data:{labels:['Closed','WIP','Open'],datasets:[{data:[totalClosed,totalWip,totalOpen],backgroundColor:[C.success,C.primary,C.danger],borderColor:'#fff',borderWidth:2}]},options:{cutout:'55%',plugins:{legend:{display:true,position:'bottom',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT}}}});
+
+  // PPM by Asset
+  const ctx2=document.getElementById('chart-cafm-ppm')?.getContext('2d');
+  if(ctx2) charts.cafmPpm=new Chart(ctx2,{type:'bar',data:{labels:assets.map(a=>a.name),datasets:[
+    {label:'Daily',data:assets.map(a=>a.cafm.checkDaily),backgroundColor:C.success+'BB',borderRadius:2},
+    {label:'Weekly',data:assets.map(a=>a.cafm.checkWeekly),backgroundColor:C.primary+'BB',borderRadius:2},
+    {label:'Monthly',data:assets.map(a=>a.cafm.checkMonthly),backgroundColor:C.purple+'BB',borderRadius:2}
+  ]},options:{scales:{x:{grid:{display:false}},y:{min:60,max:100,grid:{color:C.grid}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT}}}});
+
+  // Vendor Scorecard
+  const ctx3=document.getElementById('chart-cafm-vendor')?.getContext('2d');
+  if(ctx3) charts.cafmVendor=new Chart(ctx3,{type:'bar',data:{labels:assets.map(a=>a.name),datasets:[
+    {label:'OTD %',data:assets.map(a=>a.cafm.vendorOtd),backgroundColor:C.primary+'BB',borderRadius:2},
+    {label:'Quality %',data:assets.map(a=>a.cafm.vendorQuality),backgroundColor:C.success+'BB',borderRadius:2}
+  ]},options:{scales:{x:{grid:{display:false}},y:{min:70,max:100,grid:{color:C.grid}}},plugins:{legend:{display:true,position:'top',labels:{font:{size:9},boxWidth:10}},tooltip:{...TT}}}});
+
+  // Checklist Metrics
+  document.getElementById('cafm-checklist-metrics').innerHTML = `
+    <div class="metric-row" onclick="openChartModal('Daily Checklist','Inspection completion rate','Tracks status of all mandatory engineering and facility checks logged daily.',event)"><div class="metric-meta"><span>Daily Checklist Compliance</span><span style="font-weight:700">${avgCheck}%</span></div><div class="bar-track"><div class="bar-fill g" style="width:${avgCheck}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Weekly Checklist','Weekly checks compliance','Tracks compliance for scheduled weekly preventive actions.',event)"><div class="metric-meta"><span>Weekly Checklist Compliance</span><span style="font-weight:700">${avg(assets,a=>a.cafm.checkWeekly).toFixed(0)}%</span></div><div class="bar-track"><div class="bar-fill b" style="width:${avg(assets,a=>a.cafm.checkWeekly)}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Monthly Checklist','Monthly checks compliance','Tracks long-term preventative check completion rates.',event)"><div class="metric-meta"><span>Monthly Checklist Compliance</span><span style="font-weight:700">${avg(assets,a=>a.cafm.checkMonthly).toFixed(0)}%</span></div><div class="bar-track"><div class="bar-fill p" style="width:${avg(assets,a=>a.cafm.checkMonthly)}%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('PPM Scans','QR Scan Compliance','Logs count of assets scanned during checklist walks using QR code tags.',event)"><div class="metric-meta"><span>QR-Based PPM Scans (MTD)</span><span style="font-weight:700">${fmtNum(totalActive*2)}</span></div><div class="bar-track"><div class="bar-fill t" style="width:78%"></div></div></div>
+    <div class="metric-row" onclick="openChartModal('Workbook Tasks','Workbook Checklist status','Tracks status of items in the technician digital workbooks.',event)"><div class="metric-meta"><span>Digital Workbook Tasks</span><span style="font-weight:700">${fmtNum(Math.floor(totalActive*0.3))}</span></div><div class="bar-track"><div class="bar-fill b" style="width:72%"></div></div></div>
+  `;
+
+  // AMC Table
+  document.querySelector('#cafm-amc-table tbody').innerHTML = assets.map(a=>`<tr onclick="openAMCDetailModal('${a.name}', '${a.cafm.amcActive}', '${a.cafm.amcExpiring}', '${a.cafm.vendorOtd}')"><td style="font-weight:600">${a.name}</td><td>${a.cafm.amcActive}</td><td style="color:var(--c-warning)">${a.cafm.amcExpiring}</td><td>${a.cafm.vendorOtd}%</td><td><span class="badge ${a.cafm.amcExpiring>2?'warn':'ok'}">${a.cafm.amcExpiring>2?'Review':'OK'}</span></td></tr>`).join('');
+
+  // Word Cloud
+  document.getElementById('cafm-wordcloud').innerHTML = WORD_CLOUD_WORDS.map(w=>`<span class="wc-word" onclick="openFaultKeywordModal('${w.t.replace(/'/g, "\\'")}', '${w.c}')" style="font-size:${w.s}px;color:${w.c};background:${w.c}15;border:1px solid ${w.c}30">${w.t}</span>`).join('');
+}
+
+/* ================================================================
+   PORTFOLIO SECTION
+================================================================ */
+/* ================================================================
+   PORTFOLIO SECTION
+================================================================ */
+function initPortfolio(){
+  renderPortfolio();
+}
+
+/* ================================================================
+   MODAL
+================================================================ */
+function openModal(title, subtitle, bodyHTML){
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-subtitle').textContent = subtitle;
+  document.getElementById('modal-body').innerHTML = bodyHTML;
+  document.getElementById('modal-overlay').classList.add('open');
+  document.body.classList.add('no-scroll');
+}
+function closeModal(e){
+  if(e && e.target!==document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').classList.remove('open');
+  document.body.classList.remove('no-scroll');
+}
+
+/* ================================================================
+   MODAL OPENERS — KPI Cards (Context-Aware)
+================================================================ */
+function getKPIValue(a, name){
+  if(name==='EPI') return a.bms.epi+' kWh/sqft';
+  if(name==='WCI') return a.bms.wci+' KL/sqft';
+  if(name==='Power Factor') return a.bms.pf;
+  if(name==='COP') return a.bms.cop;
+  if(name==='Equipment Uptime') return a.bms.uptime+'%';
+  if(name==='Carbon Footprint'||name==='Carbon (tCO₂)') return fmtNum(a.bms.carbon)+' tCO₂';
+  if(name==='SLA Score'||name==='SLA Weighted') return a.fms.sla+'%';
+  if(name==='PPM Compliance') return a.fms.ppm+'%';
+  if(name==='Response Time') return '12 min';
+  if(name==='Cost Efficiency') return '₹'+((8+Math.random()*5).toFixed(1))+'/sqft';
+  if(name==='CSAT Score') return (3.8+Math.random()*0.8).toFixed(1);
+  if(name==='NPS') return Math.floor(58+Math.random()*14);
+  if(name==='Corr. Actions') return a.fms.corrActions+'%';
+  return '—';
+}
+function openKPIModal(name, subtitle, value, detail, e){
+  if(e) e.stopPropagation();
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  let tableHTML = '';
+  if(isAll){
+    const rows = Object.entries(ASSETS).map(([k,a])=>
+      `<tr><td style="font-weight:600">${a.name}</td><td>${a.city}</td><td style="font-weight:700">${getKPIValue(a,name)}</td></tr>`
+    ).join('');
+    tableHTML = `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:4px">Asset Breakdown — All India</div>
+    <div class="tbl-wrap"><table class="data-tbl"><thead><tr><th>Asset</th><th>City</th><th>Value</th></tr></thead><tbody style="max-height:200px">${rows}</tbody></table></div>`;
+  } else {
+    const a = assets[0];
+    tableHTML = `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:6px">${a.name} — Detailed Parameters</div>
+    <div class="modal-params" style="margin-top:6px">
+      <div class="mp"><span class="mp-label">SPV</span><span class="mp-val">${a.spv}</span></div>
+      <div class="mp"><span class="mp-label">City</span><span class="mp-val">${a.city}, ${a.state}</span></div>
+      <div class="mp"><span class="mp-label">Billing Units</span><span class="mp-val">${a.bu}${a.tentative?' + 1 tentative':''}</span></div>
+      <div class="mp"><span class="mp-label">GLA</span><span class="mp-val">${fmtNum(a.gla)} sft</span></div>
+    </div>
+    <div class="tbl-wrap" style="margin-top:6px"><table class="data-tbl"><thead><tr><th>KPI</th><th>Value</th></tr></thead><tbody>
+      <tr><td>EPI</td><td style="font-weight:700">${a.bms.epi} kWh/sqft</td></tr>
+      <tr><td>WCI</td><td style="font-weight:700">${a.bms.wci} KL/sqft</td></tr>
+      <tr><td>Power Factor</td><td style="font-weight:700">${a.bms.pf}</td></tr>
+      <tr><td>COP</td><td style="font-weight:700">${a.bms.cop}</td></tr>
+      <tr><td>Equipment Uptime</td><td style="font-weight:700">${a.bms.uptime}%</td></tr>
+      <tr><td>Carbon Footprint</td><td style="font-weight:700">${fmtNum(a.bms.carbon)} tCO₂</td></tr>
+      <tr><td>SLA Score</td><td style="font-weight:700">${a.fms.sla}%</td></tr>
+      <tr><td>PPM Compliance</td><td style="font-weight:700">${a.fms.ppm}%</td></tr>
+    </tbody></table></div>`;
+  }
+  openModal(name, `${subtitle} · ${ctxLabel}`,
+    `<div style="display:flex;align-items:center;gap:12px;padding:12px;background:#F8FAFC;border-radius:8px;border:1px solid var(--c-border-lt);margin-bottom:4px">
+      <span style="font-size:28px;font-weight:700;color:var(--c-primary)">${value}</span>
+      <span style="font-size:11px;color:var(--c-txt2)">${ctxLabel}</span>
+    </div>
+    <p style="font-size:11px;color:var(--c-txt2);line-height:1.6">${detail}</p>
+    ${tableHTML}`);
+}
+
+/* ================================================================
+   MODAL OPENERS — Chart Cards (Context-Aware)
+================================================================ */
+function openChartModal(title, subtitle, detail){
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  let tableHTML = '';
+  if(isAll){
+    tableHTML = `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:8px">Portfolio Overview — All Assets</div>
+    <div class="tbl-wrap"><table class="data-tbl"><thead><tr><th>Asset</th><th>SPV</th><th>City</th><th>BU</th><th>GLA (sft)</th></tr></thead>
+    <tbody style="max-height:200px">${Object.values(ASSETS).map(a=>`<tr><td style="font-weight:600">${a.name}</td><td>${a.spv}</td><td>${a.city}</td><td>${a.bu}</td><td>${fmtNum(a.gla)}</td></tr>`).join('')}</tbody></table></div>`;
+  } else {
+    const a = assets[0];
+    tableHTML = `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:8px">${a.name} — Asset Detail</div>
+    <div class="modal-params" style="margin-top:6px">
+      <div class="mp"><span class="mp-label">SPV</span><span class="mp-val">${a.spv}</span></div>
+      <div class="mp"><span class="mp-label">Location</span><span class="mp-val">${a.city}, ${a.state}</span></div>
+      <div class="mp"><span class="mp-label">Billing Units</span><span class="mp-val">${a.bu}${a.tentative?' + 1 tentative':''}</span></div>
+      <div class="mp"><span class="mp-label">GLA</span><span class="mp-val">${fmtNum(a.gla)} sft</span></div>
+    </div>
+    <div class="tbl-wrap" style="margin-top:6px"><table class="data-tbl"><thead><tr><th>System</th><th>Key Metric</th><th>Value</th></tr></thead><tbody>
+      <tr><td>BMS</td><td>EPI</td><td style="font-weight:700">${a.bms.epi} kWh/sqft</td></tr>
+      <tr><td>BMS</td><td>COP</td><td style="font-weight:700">${a.bms.cop}</td></tr>
+      <tr><td>BMS</td><td>Uptime</td><td style="font-weight:700">${a.bms.uptime}%</td></tr>
+      <tr><td>FMS</td><td>SLA Score</td><td style="font-weight:700">${a.fms.sla}%</td></tr>
+      <tr><td>FMS</td><td>PPM Compliance</td><td style="font-weight:700">${a.fms.ppm}%</td></tr>
+      <tr><td>CAFM</td><td>Active Assets</td><td style="font-weight:700">${fmtNum(a.cafm.active)}</td></tr>
+      <tr><td>CAFM</td><td>Vendor OTD</td><td style="font-weight:700">${a.cafm.vendorOtd}%</td></tr>
+    </tbody></table></div>`;
+  }
+  openModal(title, `${subtitle} · ${ctxLabel}`,
+    `<p style="font-size:11px;color:var(--c-txt2);line-height:1.7">${detail}</p>
+    ${tableHTML}`);
+}
+
+/* AQI Detail (Context-Aware) */
+function openAQIModal(){
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  const rows = assets.map(a=>`<tr><td style="font-weight:600">${a.name}</td><td>${a.city}</td><td style="font-weight:700;color:${a.bms.iaq<50?'var(--c-success)':'var(--c-warning)'}">${a.bms.iaq}</td><td>${a.bms.aaq}</td></tr>`).join('');
+  let bodyHTML = `<div class="modal-params">
+      <div class="mp"><span class="mp-label">${isAll?'Avg ':''}Indoor AQI</span><span class="mp-val">${avg(assets,a=>a.bms.iaq).toFixed(0)}</span></div>
+      <div class="mp"><span class="mp-label">Status</span><span class="mp-val" style="color:${avg(assets,a=>a.bms.iaq)<50?'var(--c-success)':'var(--c-warning)'}">${avg(assets,a=>a.bms.iaq)<50?'Good':'Moderate'}</span></div>
+      <div class="mp"><span class="mp-label">CO₂</span><span class="mp-val">${isAll?'412':'~'+(380+Math.floor(Math.random()*80))} ppm</span></div>
+      <div class="mp"><span class="mp-label">PM2.5</span><span class="mp-val">${isAll?'18':'~'+(12+Math.floor(Math.random()*15))} µg/m³</span></div>
+    </div>
+    <p style="font-size:11px;color:var(--c-txt2);line-height:1.6;margin-top:8px">AQI 0–50 = Good, 51–100 = Moderate, 101+ = Poor. CO₂ optimal range: 400–800 ppm. PM2.5 safe limit: < 35 µg/m³ (WHO guideline).</p>`;
+  if(isAll){
+    bodyHTML += `<div class="tbl-wrap" style="margin-top:4px"><table class="data-tbl"><thead><tr><th>Asset</th><th>City</th><th>Indoor AQI</th><th>Outdoor</th></tr></thead><tbody style="max-height:180px">${rows}</tbody></table></div>`;
+  } else {
+    const a = assets[0];
+    bodyHTML += `<div class="tbl-wrap" style="margin-top:6px"><table class="data-tbl"><thead><tr><th>Zone</th><th>AQI</th><th>CO₂ (ppm)</th><th>PM2.5 (µg/m³)</th></tr></thead><tbody>
+      <tr><td>Lobby & Reception</td><td style="font-weight:700;color:var(--c-success)">${Math.max(a.bms.iaq-8,20)}</td><td>385</td><td>12</td></tr>
+      <tr><td>Office Floors 1-3</td><td style="font-weight:700;color:${a.bms.iaq<50?'var(--c-success)':'var(--c-warning)'}">${a.bms.iaq}</td><td>420</td><td>18</td></tr>
+      <tr><td>Office Floors 4-6</td><td style="font-weight:700;color:${(a.bms.iaq+3)<50?'var(--c-success)':'var(--c-warning)'}">${a.bms.iaq+3}</td><td>445</td><td>22</td></tr>
+      <tr><td>Basement / Parking</td><td style="font-weight:700;color:var(--c-warning)">${a.bms.iaq+12}</td><td>520</td><td>28</td></tr>
+      <tr><td>Server Room</td><td style="font-weight:700;color:var(--c-success)">${Math.max(a.bms.iaq-12,18)}</td><td>380</td><td>8</td></tr>
+    </tbody></table></div>`;
+  }
+  openModal('Indoor Air Quality', `Sensor Readings · ${ctxLabel}`, bodyHTML);
+}
+
+/* Water Quality Detail (Context-Aware) */
+function openWaterModal(){
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  let bodyHTML = `<p style="font-size:11px;color:var(--c-txt2);line-height:1.6">All parameters measured at STP/WTP outlet. Compliance per CPCB (Central Pollution Control Board) norms. Tested daily by on-site lab and weekly by third-party NABL-accredited lab.</p>`;
+  if(isAll){
+    bodyHTML += `<div class="modal-params" style="margin-top:8px">
+      <div class="mp"><span class="mp-label">TDS</span><span class="mp-val">320 ppm</span></div>
+      <div class="mp"><span class="mp-label">pH</span><span class="mp-val">7.2</span></div>
+      <div class="mp"><span class="mp-label">BOD</span><span class="mp-val">8 mg/L</span></div>
+      <div class="mp"><span class="mp-label">COD</span><span class="mp-val">45 mg/L</span></div>
+      <div class="mp"><span class="mp-label">TSS</span><span class="mp-val">12 mg/L</span></div>
+      <div class="mp"><span class="mp-label">Hardness</span><span class="mp-val" style="color:var(--c-warning)">265 mg/L</span></div>
+    </div>
+    <div class="tbl-wrap" style="margin-top:8px"><table class="data-tbl"><thead><tr><th>Asset</th><th>TDS (ppm)</th><th>pH</th><th>BOD (mg/L)</th><th>COD (mg/L)</th></tr></thead><tbody>
+    ${Object.values(ASSETS).map(a=>`<tr><td style="font-weight:600">${a.name}</td><td>${280+Math.floor(Math.random()*80)}</td><td>${(6.8+Math.random()*0.8).toFixed(1)}</td><td>${6+Math.floor(Math.random()*5)}</td><td>${38+Math.floor(Math.random()*15)}</td></tr>`).join('')}
+    </tbody></table></div>`;
+  } else {
+    const a = assets[0];
+    bodyHTML += `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:8px">${a.name} — STP/WTP Outlet Parameters</div>
+    <div class="tbl-wrap" style="margin-top:6px"><table class="data-tbl"><thead><tr><th>Parameter</th><th>CPCB Limit</th><th>Actual</th><th>Status</th></tr></thead><tbody>
+      <tr><td>TDS</td><td>< 500 ppm</td><td style="font-weight:700">${280+Math.floor(Math.random()*80)} ppm</td><td><span class="badge ok">Pass</span></td></tr>
+      <tr><td>pH Level</td><td>6.5 – 8.5</td><td style="font-weight:700">${(6.8+Math.random()*0.8).toFixed(1)}</td><td><span class="badge ok">Pass</span></td></tr>
+      <tr><td>BOD</td><td>< 10 mg/L</td><td style="font-weight:700">${6+Math.floor(Math.random()*5)} mg/L</td><td><span class="badge ok">Pass</span></td></tr>
+      <tr><td>COD</td><td>< 50 mg/L</td><td style="font-weight:700">${38+Math.floor(Math.random()*15)} mg/L</td><td><span class="badge ok">Pass</span></td></tr>
+      <tr><td>TSS</td><td>< 30 mg/L</td><td style="font-weight:700">${8+Math.floor(Math.random()*12)} mg/L</td><td><span class="badge ok">Pass</span></td></tr>
+      <tr><td>Hardness</td><td>< 300 mg/L</td><td style="font-weight:700">${220+Math.floor(Math.random()*60)} mg/L</td><td><span class="badge ${Math.random()>0.3?'ok':'warn'}">${Math.random()>0.3?'Pass':'Review'}</span></td></tr>
+    </tbody></table></div>`;
+  }
+  openModal('Water Quality', `STP/WTP Parameters · ${ctxLabel}`, bodyHTML);
+}
+
+/* Work Order Detail (Context-Aware) */
+function openWOModal(){
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  let bodyHTML = `<div class="modal-params">
+      <div class="mp"><span class="mp-label">Total Closed</span><span class="mp-val" style="color:var(--c-success)">${sum(assets,a=>a.fms.closedWo)}</span></div>
+      <div class="mp"><span class="mp-label">In Progress</span><span class="mp-val" style="color:var(--c-primary)">${sum(assets,a=>a.fms.wipWo)}</span></div>
+      <div class="mp"><span class="mp-label">Open</span><span class="mp-val" style="color:var(--c-warning)">${sum(assets,a=>a.fms.openWo)}</span></div>
+      <div class="mp"><span class="mp-label">Closure Rate</span><span class="mp-val">${(sum(assets,a=>a.fms.closedWo)/(sum(assets,a=>a.fms.closedWo)+sum(assets,a=>a.fms.openWo)+sum(assets,a=>a.fms.wipWo))*100).toFixed(1)}%</span></div>
+    </div>`;
+  if(isAll){
+    const rows = assets.map(a=>`<tr><td style="font-weight:600">${a.name}</td><td style="color:var(--c-success)">${a.fms.closedWo}</td><td style="color:var(--c-primary)">${a.fms.wipWo}</td><td style="color:var(--c-warning);font-weight:700">${a.fms.openWo}</td></tr>`).join('');
+    bodyHTML += `<div class="tbl-wrap" style="margin-top:8px"><table class="data-tbl"><thead><tr><th>Asset</th><th>Closed</th><th>WIP</th><th>Open</th></tr></thead><tbody style="max-height:200px">${rows}</tbody></table></div>`;
+  } else {
+    const a = assets[0];
+    bodyHTML += `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:8px">${a.name} — Open Work Orders</div>
+    <div class="tbl-wrap" style="margin-top:6px"><table class="data-tbl"><thead><tr><th>WO ID</th><th>Category</th><th>Priority</th><th>Status</th><th>Age</th></tr></thead><tbody>
+      <tr><td>#WO-${3200+Math.floor(Math.random()*800)}</td><td>HVAC Maintenance</td><td><span class="badge warn">P2</span></td><td>In Progress</td><td>2d</td></tr>
+      <tr><td>#WO-${3200+Math.floor(Math.random()*800)}</td><td>Electrical</td><td><span class="badge err">P1</span></td><td>Assigned</td><td>4h</td></tr>
+      <tr><td>#WO-${3200+Math.floor(Math.random()*800)}</td><td>Plumbing</td><td><span class="badge idle">P3</span></td><td>In Progress</td><td>5d</td></tr>
+      <tr><td>#WO-${3200+Math.floor(Math.random()*800)}</td><td>Fire Safety</td><td><span class="badge warn">P2</span></td><td>Open</td><td>1d</td></tr>
+      <tr><td>#WO-${3200+Math.floor(Math.random()*800)}</td><td>Soft Services</td><td><span class="badge idle">P4</span></td><td>Open</td><td>3d</td></tr>
+    </tbody></table></div>`;
+  }
+  openModal('Work Order Breakdown', `By ${isAll?'Asset &':''} Status · ${ctxLabel}`, bodyHTML);
+}
+
+/* Ticket Detail (Context-Aware) */
+function openTicketModal(){
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  let bodyHTML = `<p style="font-size:11px;color:var(--c-txt2);line-height:1.6">Tickets logged via CAFM mobile app, web portal, and QR scan. SLA: P1 (Critical) = 30 min response, P2 = 2 hrs, P3 = 8 hrs, P4 = 24 hrs.</p>`;
+  if(isAll){
+    const rows = assets.map(a=>`<tr><td style="font-weight:600">${a.name}</td><td style="color:var(--c-success)">${a.cafm.closedTix}</td><td style="color:var(--c-primary)">${a.cafm.wipTix}</td><td style="color:var(--c-danger);font-weight:700">${a.cafm.openTix}</td></tr>`).join('');
+    bodyHTML += `<div class="tbl-wrap" style="margin-top:8px"><table class="data-tbl"><thead><tr><th>Asset</th><th>Closed</th><th>WIP</th><th>Open</th></tr></thead><tbody style="max-height:200px">${rows}</tbody></table></div>`;
+  } else {
+    const a = assets[0];
+    bodyHTML += `<div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--c-txt3);margin-top:8px">${a.name} — Recent Tickets</div>
+    <div class="tbl-wrap" style="margin-top:6px"><table class="data-tbl"><thead><tr><th>Ticket ID</th><th>Category</th><th>SLA</th><th>Status</th><th>Raised</th></tr></thead><tbody>
+      <tr><td>#TK-${7000+Math.floor(Math.random()*2000)}</td><td>HVAC — Temp complaint</td><td><span class="badge warn">P2</span></td><td>In Progress</td><td>1h ago</td></tr>
+      <tr><td>#TK-${7000+Math.floor(Math.random()*2000)}</td><td>Housekeeping — Spill</td><td><span class="badge idle">P3</span></td><td>Closed</td><td>3h ago</td></tr>
+      <tr><td>#TK-${7000+Math.floor(Math.random()*2000)}</td><td>Electrical — Socket fault</td><td><span class="badge err">P1</span></td><td>Open</td><td>20m ago</td></tr>
+      <tr><td>#TK-${7000+Math.floor(Math.random()*2000)}</td><td>Plumbing — Restroom</td><td><span class="badge warn">P2</span></td><td>Assigned</td><td>45m ago</td></tr>
+      <tr><td>#TK-${7000+Math.floor(Math.random()*2000)}</td><td>Security — Access card</td><td><span class="badge idle">P4</span></td><td>Closed</td><td>5h ago</td></tr>
+    </tbody></table></div>`;
+  }
+  openModal('Help Desk Tickets', `CAFM Ticketing · ${ctxLabel}`, bodyHTML);
+}
+
+/* Alert Detail */
+function openAlertDetailModal(text, asset, system, time, sev){
+  openModal('Active Alert Details', `${system} System Alert`,
+    `<div style="padding:12px;background:#FFFBEB;border:1px solid #F59E0B;border-radius:6px;margin-bottom:8px">
+      <span style="font-weight:700;color:var(--c-${sev==='err'?'danger':sev==='warn'?'warning':'idle'});font-size:13px">${text}</span>
+      <div style="font-size:10px;color:var(--c-txt2);margin-top:4px">Location: ${asset} | Raised: ${time}</div>
+    </div>
+    <div class="modal-params">
+      <div class="mp"><span class="mp-label">Severity</span><span class="mp-val" style="color:var(--c-${sev==='err'?'danger':sev==='warn'?'warning':'idle'})">${sev==='err'?'CRITICAL':'WARNING'}</span></div>
+      <div class="mp"><span class="mp-label">Assigned Vendor</span><span class="mp-val">Apex Engineering Services</span></div>
+      <div class="mp"><span class="mp-label">SLA Countdown</span><span class="mp-val" style="color:var(--c-danger)">18 mins left</span></div>
+      <div class="mp"><span class="mp-label">Status</span><span class="mp-val">Investigating</span></div>
+    </div>
+    <div style="margin-top:8px">
+      <h4 style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--c-txt3)">Recommended Actions / SOP</h4>
+      <p style="font-size:11px;color:var(--c-txt2);margin-top:3px;line-height:1.5">1. Dispatch technicians immediately to verify telemetry sensor readings.<br>2. Switch to backup redundancy unit if load exceeds threshold.<br>3. Log operational feedback in CAFM Permit-to-Work module.</p>
+    </div>`);
+}
+
+/* AMC Contract Detail */
+function openAMCDetailModal(assetName, activeAmcs, expiringAmcs, otd){
+  openModal('AMC & Maintenance Contracts', assetName,
+    `<div class="modal-params">
+      <div class="mp"><span class="mp-label">Active Contracts</span><span class="mp-val">${activeAmcs}</span></div>
+      <div class="mp"><span class="mp-label">Expiring Soon</span><span class="mp-val" style="color:var(--c-warning)">${expiringAmcs}</span></div>
+      <div class="mp"><span class="mp-label">On-Time Delivery</span><span class="mp-val">${otd}%</span></div>
+      <div class="mp"><span class="mp-label">Compliance Status</span><span class="mp-val" style="color:var(--c-success)">Excellent</span></div>
+    </div>
+    <p style="font-size:11px;color:var(--c-txt2);line-height:1.6;margin-top:8px">AMC tracker lists critical vendor SLA contracts for HVAC maintenance, elevator safety systems, diesel generator overhaul, firefighting pumps, and STP mechanical components.</p>`);
+}
+
+/* Word Cloud Keyword Detail (Context-Aware) */
+function openFaultKeywordModal(keyword, color){
+  const assets = getAssets();
+  const isAll = selectedAsset==='all';
+  const ctxLabel = isAll ? 'All India' : assets[0]?.name||'—';
+  let ticketRows = '';
+  if(isAll){
+    ticketRows = `
+      <tr><td>#T-${9100+Math.floor(Math.random()*900)}</td><td>MFAR</td><td>${keyword} maintenance check requested</td><td><span class="badge ok">Resolved</span></td></tr>
+      <tr><td>#T-${8900+Math.floor(Math.random()*200)}</td><td>ITPG</td><td>Emergency alarm triggered: ${keyword}</td><td><span class="badge warn">In Progress</span></td></tr>
+      <tr><td>#T-${8800+Math.floor(Math.random()*100)}</td><td>Weikfield</td><td>Inspection alert for ${keyword}</td><td><span class="badge ok">Resolved</span></td></tr>`;
+  } else {
+    const a = assets[0];
+    ticketRows = `
+      <tr><td>#T-${9100+Math.floor(Math.random()*900)}</td><td>${a.name}</td><td>${keyword} — scheduled PPM overdue</td><td><span class="badge warn">In Progress</span></td></tr>
+      <tr><td>#T-${8900+Math.floor(Math.random()*200)}</td><td>${a.name}</td><td>${keyword} fault logged by technician</td><td><span class="badge ok">Resolved</span></td></tr>
+      <tr><td>#T-${8800+Math.floor(Math.random()*100)}</td><td>${a.name}</td><td>Preventive inspection: ${keyword}</td><td><span class="badge ok">Resolved</span></td></tr>`;
+  }
+  openModal(`Fault Keyword: "${keyword}"`, `CAFM Analytics · ${ctxLabel}`,
+    `<p style="font-size:11px;color:var(--c-txt2);line-height:1.6">Shows aggregate ticketing history and alarm correlation matching search term: <strong>"${keyword}"</strong>.</p>
+    <div class="tbl-wrap" style="margin-top:8px"><table class="data-tbl"><thead><tr><th>Ticket ID</th><th>Asset</th><th>Fault Description</th><th>Status</th></tr></thead>
+    <tbody style="max-height:200px">${ticketRows}</tbody></table></div>`);
+}
+
+/* ================================================================
+   INIT
+================================================================ */
+document.addEventListener('DOMContentLoaded', () => {
+
+  /* ── Focus Mode: check for ?focus=card-id ── */
+  const urlParams = new URLSearchParams(window.location.search);
+  const focusId = urlParams.get('focus');
+
+  if (focusId) {
+    document.body.classList.add('focus-mode');
+    // Determine which section the target lives in and show it
+    const targetEl = document.getElementById(focusId);
+    if (targetEl) {
+      // Find parent section
+      const parentSection = targetEl.closest('.section');
+      if (parentSection) {
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        parentSection.classList.add('active');
+      }
+      targetEl.classList.add('focus-target');
+      // If target is a KPI inside a kpi-strip, we need the strip to use display:contents
+      // so the KPI is a direct child of the section grid
+      // (handled by CSS: body.focus-mode .kpi-strip { display: contents !important; })
+    }
+    // Init all sections so charts in any section work in focus mode
+    ['sec-bms','sec-fms','sec-cafm','sec-portfolio'].forEach(id => {
+      const sec = document.getElementById(id);
+      if (sec && sec.classList.contains('active') && !initialized.has(id)) {
+        initSection(id);
+        initialized.add(id);
+      }
+    });
+    // After init, resize the focused chart if any
+    setTimeout(() => {
+      Object.values(charts).forEach(ch => {
+        if (ch.canvas && ch.canvas.closest('.focus-target')) {
+          ch.resize();
+          ch.update('none');
+        }
+      });
+    }, 100);
+    return; // Skip normal init and drag setup in focus mode
+  }
+
+  /* ── Normal Init ── */
+  initBMS();
+  initialized.add('sec-bms');
+
+  /* ── Auto-assign IDs to dynamically-generated KPIs ── */
+  function assignKpiIds() {
+    const strips = {
+      'bms-kpi-strip': 'kpi-bms',
+      'fms-kpi-strip': 'kpi-fms',
+      'cafm-kpi-strip': 'kpi-cafm',
+      'portfolio-kpi-strip': 'kpi-port'
+    };
+    Object.entries(strips).forEach(([stripId, prefix]) => {
+      const strip = document.getElementById(stripId);
+      if (!strip) return;
+      strip.querySelectorAll('.kpi').forEach((kpi, i) => {
+        if (!kpi.id) kpi.id = `${prefix}-${i}`;
+        kpi.setAttribute('draggable', 'true');
+      });
+    });
+  }
+
+  // KPIs are rendered by initBMS/FMS/CAFM/Portfolio, so re-assign after each init
+  const origInitBMS = initBMS, origInitFMS = initFMS,
+        origInitCAFM = initCAFM, origInitPortfolio = initPortfolio;
+  initBMS = function(){ origInitBMS(); assignKpiIds(); };
+  initFMS = function(){ origInitFMS(); assignKpiIds(); };
+  initCAFM = function(){ origInitCAFM(); assignKpiIds(); };
+  initPortfolio = function(){ origInitPortfolio(); assignKpiIds(); };
+  // Also run for BMS which was just initialized
+  assignKpiIds();
+
+  // Also re-assign after seamless updates
+  const origUpdateBMS = updateBMS, origUpdateFMS = updateFMS,
+        origUpdateCAFM = updateCAFM, origUpdatePortfolio = updatePortfolio;
+  updateBMS = function(){ origUpdateBMS(); assignKpiIds(); };
+  updateFMS = function(){ origUpdateFMS(); assignKpiIds(); };
+  updateCAFM = function(){ origUpdateCAFM(); assignKpiIds(); };
+  updatePortfolio = function(){ origUpdatePortfolio(); assignKpiIds(); };
+
+  /* ════════════════════════════════════════════════════════════════
+     DRAG & DROP — Launch card in new window
+  ════════════════════════════════════════════════════════════════ */
+  const dropZone = document.getElementById('drag-drop-zone');
+  let draggedId = null;
+
+  // Use event delegation on body for dragstart/dragend (covers static + dynamic elements)
+  document.body.addEventListener('dragstart', (e) => {
+    const draggable = e.target.closest('.card[draggable="true"], .kpi[draggable="true"]');
+    if (!draggable) return;
+    draggedId = draggable.id;
+    if (!draggedId) return;
+
+    e.dataTransfer.setData('text/plain', draggedId);
+    e.dataTransfer.effectAllowed = 'move';
+
+    // Add drag visual state after a microtask (so the drag image captures the original look)
+    requestAnimationFrame(() => {
+      draggable.classList.add('is-dragging');
+      dropZone.classList.add('visible');
+    });
+  });
+
+  document.body.addEventListener('dragend', (e) => {
+    const draggable = e.target.closest('.card[draggable="true"], .kpi[draggable="true"]');
+    if (draggable) draggable.classList.remove('is-dragging');
+    dropZone.classList.remove('visible', 'drag-over');
+    draggedId = null;
+  });
+
+  // Drop Zone events
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    dropZone.classList.add('drag-over');
+  });
+
+  dropZone.addEventListener('dragleave', (e) => {
+    // Only remove if actually leaving the drop zone (not entering a child)
+    if (!dropZone.contains(e.relatedTarget)) {
+      dropZone.classList.remove('drag-over');
+    }
+  });
+
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    if (id) {
+      // Determine the section the card belongs to, include it as a hash for init
+      const el = document.getElementById(id);
+      const parentSection = el?.closest('.section');
+      const secParam = parentSection ? '&sec=' + parentSection.id : '';
+      window.open(
+        window.location.pathname + '?focus=' + id + secParam,
+        '_blank',
+        'width=800,height=600,menubar=no,toolbar=no,location=no,status=no'
+      );
+    }
+    dropZone.classList.remove('visible', 'drag-over');
+    // Remove drag styling from source
+    if (draggedId) {
+      const src = document.getElementById(draggedId);
+      if (src) src.classList.remove('is-dragging');
+    }
+    draggedId = null;
+  });
+
+  /* ════════════════════════════════════════════════════════════════
+     1. DIGITAL TWIN (ISOMETRIC MAP) LOGIC
+  ════════════════════════════════════════════════════════════════ */
+  setInterval(() => {
+    // Randomly change the alert zone
+    document.querySelectorAll('.dt-zone').forEach(z => z.classList.remove('alert'));
+    const zones = ['dt-z1', 'dt-z2', 'dt-z3', 'dt-z4'];
+    const rZone = zones[Math.floor(Math.random() * zones.length)];
+    const el = document.getElementById(rZone);
+    if (el) el.classList.add('alert');
+    const badge = document.getElementById('dt-badge');
+    if (badge) badge.textContent = 'Alert: ' + rZone.toUpperCase();
+  }, 4000);
+
+  /* ════════════════════════════════════════════════════════════════
+     2. COMPUTER VISION CAMERA FEED & EMERGENCY PREEMPTION
+  ════════════════════════════════════════════════════════════════ */
+  const cvCanvas = document.getElementById('cv-canvas');
+  if (cvCanvas) {
+    const ctxCV = cvCanvas.getContext('2d');
+    let cw, ch;
+    function resizeCV() {
+      cw = cvCanvas.width = cvCanvas.offsetWidth;
+      ch = cvCanvas.height = cvCanvas.offsetHeight;
+    }
+    window.addEventListener('resize', resizeCV);
+    resizeCV();
+
+    let preemptionStartTime = 0;
+    let isPreemption = false;
+
+    // Toggle preemption status
+    setInterval(() => {
+      isPreemption = true;
+      preemptionStartTime = Date.now();
+      const badge = document.getElementById('cv-status-badge');
+      if (badge) {
+        badge.textContent = 'OVERRIDE';
+        badge.className = 'badge err';
+      }
+      setTimeout(() => {
+        isPreemption = false;
+        const badge = document.getElementById('cv-status-badge');
+        if (badge) {
+          badge.textContent = 'AI Active';
+          badge.className = 'badge ok';
+        }
+      }, 4500); // Preemption lasts 4.5 seconds
+    }, 14000); // Triggers every 14 seconds
+
+    const normalCars = [
+      { x: 30, y: 0, w: 22, h: 42, label: 'CAR 94%', speed: 1.8, lane: 0 },
+      { x: 120, y: -80, w: 24, h: 44, label: 'SUV 91%', speed: 2.2, lane: 2 }
+    ];
+    
+    const emergencyCar = { x: 75, y: -150, w: 26, h: 50, label: 'AMBULANCE 99%', speed: 4.2 };
+
+    function drawCV() {
+      // Dark background
+      ctxCV.fillStyle = '#090D16';
+      ctxCV.fillRect(0, 0, cw, ch);
+
+      // Draw roadway (three lanes: Left, Center, Right)
+      const roadLeft = cw * 0.15;
+      const roadWidth = cw * 0.7;
+      const roadRight = roadLeft + roadWidth;
+      const laneWidth = roadWidth / 3;
+
+      ctxCV.fillStyle = '#171D2C';
+      ctxCV.fillRect(roadLeft, 0, roadWidth, ch);
+
+      // Draw lane dividers
+      ctxCV.strokeStyle = isPreemption && (Math.floor(Date.now() / 150) % 2 === 0) ? '#EF4444' : '#475569';
+      ctxCV.lineWidth = 1.5;
+      ctxCV.setLineDash([10, 15]);
+
+      // Left divider
+      ctxCV.beginPath();
+      ctxCV.moveTo(roadLeft + laneWidth, 0);
+      ctxCV.lineTo(roadLeft + laneWidth, ch);
+      ctxCV.stroke();
+
+      // Right divider
+      ctxCV.beginPath();
+      ctxCV.moveTo(roadLeft + 2 * laneWidth, 0);
+      ctxCV.lineTo(roadLeft + 2 * laneWidth, ch);
+      ctxCV.stroke();
+      ctxCV.setLineDash([]); // Reset dash
+
+      // Road edges
+      ctxCV.strokeStyle = '#334155';
+      ctxCV.lineWidth = 2;
+      ctxCV.beginPath();
+      ctxCV.moveTo(roadLeft, 0); ctxCV.lineTo(roadLeft, ch);
+      ctxCV.moveTo(roadRight, 0); ctxCV.lineTo(roadRight, ch);
+      ctxCV.stroke();
+
+      if (isPreemption) {
+        // Blinking red overlay border on canvas
+        if (Math.floor(Date.now() / 250) % 2 === 0) {
+          ctxCV.strokeStyle = 'rgba(239, 68, 68, 0.8)';
+          ctxCV.lineWidth = 3;
+          ctxCV.strokeRect(0, 0, cw, ch);
+        }
+
+        // Draw "PREEMPTION OVERRIDE TRIGGERED" Banner
+        ctxCV.fillStyle = 'rgba(239, 68, 68, 0.95)';
+        ctxCV.fillRect(0, 10, cw, 22);
+        ctxCV.fillStyle = '#FFF';
+        ctxCV.font = '700 9px sans-serif';
+        ctxCV.textAlign = 'center';
+        ctxCV.fillText('PREEMPTION OVERRIDE TRIGGERED', cw / 2, 24);
+        ctxCV.textAlign = 'left';
+
+        // Draw lane clearing directions (flashing arrows pointing outwards)
+        ctxCV.fillStyle = '#F59E0B';
+        ctxCV.font = '700 8px sans-serif';
+        const blink = Math.floor(Date.now() / 200) % 2 === 0;
+        if (blink) {
+          ctxCV.fillText('◀ EVADE', roadLeft - 38, ch / 2);
+          ctxCV.fillText('EVADE ▶', roadRight + 4, ch / 2);
+        }
+
+        // Update normal cars position (push them outwards)
+        normalCars.forEach((c) => {
+          c.y += c.speed * 0.4; // slow down
+          if (c.y > ch) c.y = -60;
+
+          // Target X to clear the center lane: Left lane cars go left, right lane go right
+          const targetX = c.lane === 0 ? roadLeft + 4 : roadLeft + 2 * laneWidth + 10;
+          c.x += (targetX - c.x) * 0.08;
+
+          drawVehicleBox(c.x, c.y, c.w, c.h, c.label, '#F59E0B', 'CLEARING');
+        });
+
+        // Update & Draw Emergency Vehicle
+        const elapsed = Date.now() - preemptionStartTime;
+        emergencyCar.y = -80 + (elapsed * 0.12) * emergencyCar.speed; // move fast
+        emergencyCar.x = roadLeft + laneWidth + (laneWidth - emergencyCar.w) / 2;
+
+        drawVehicleBox(emergencyCar.x, emergencyCar.y, emergencyCar.w, emergencyCar.h, 'EMERGENCY: AMBULANCE 99%', '#EF4444', 'PREEMPT_PASS');
+
+      } else {
+        // Normal Mode
+        normalCars.forEach(c => {
+          c.y += c.speed;
+          if (c.y > ch) c.y = -60;
+
+          // Return to normal lane center
+          const targetX = roadLeft + c.lane * laneWidth + (laneWidth - c.w) / 2;
+          c.x += (targetX - c.x) * 0.08;
+
+          drawVehicleBox(c.x, c.y, c.w, c.h, c.label, '#4ADE80', 'TRACKING');
+        });
+      }
+
+      requestAnimationFrame(drawCV);
+    }
+
+    function drawVehicleBox(x, y, w, h, label, color, status) {
+      ctxCV.strokeStyle = color;
+      ctxCV.lineWidth = 1.5;
+      ctxCV.strokeRect(x, y, w, h);
+
+      // Corner ticks
+      const l = 5;
+      ctxCV.beginPath();
+      ctxCV.moveTo(x, y + l); ctxCV.lineTo(x, y); ctxCV.lineTo(x + l, y);
+      ctxCV.moveTo(x + w - l, y); ctxCV.lineTo(x + w, y); ctxCV.lineTo(x + w, y + l);
+      ctxCV.moveTo(x, y + h - l); ctxCV.lineTo(x, y + h); ctxCV.lineTo(x + l, y + h);
+      ctxCV.moveTo(x + w - l, y + h); ctxCV.lineTo(x + w, y + h); ctxCV.lineTo(x + w, y + h - l);
+      ctxCV.stroke();
+
+      // Label background
+      ctxCV.fillStyle = color;
+      ctxCV.fillRect(x, y - 12, w, 12);
+
+      // Label text
+      ctxCV.fillStyle = '#000';
+      ctxCV.font = '700 8px monospace';
+      ctxCV.fillText(status, x + 2, y - 3);
+      
+      // Secondary label below card
+      ctxCV.fillStyle = color;
+      ctxCV.font = '8px monospace';
+      ctxCV.fillText(label, x, y + h + 9);
+    }
+    requestAnimationFrame(drawCV);
+  }
+
+
+
+  /* ════════════════════════════════════════════════════════════════
+     4. MULTI-SCREEN HOVER SYNC (localStorage)
+  ════════════════════════════════════════════════════════════════ */
+  // Sender
+  document.body.addEventListener('mouseover', (e) => {
+    const ac = e.target.closest('.asset-card');
+    if (ac && ac.dataset.asset) {
+      localStorage.setItem('syncHover', ac.dataset.asset);
+    }
+  });
+  document.body.addEventListener('mouseout', (e) => {
+    const ac = e.target.closest('.asset-card');
+    if (ac && ac.dataset.asset) {
+      localStorage.removeItem('syncHover');
+    }
+  });
+
+  // Receiver
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'syncHover') {
+      const assetId = e.newValue;
+      
+      // Highlight DOM elements
+      document.querySelectorAll('.asset-card, .tree-item.asset-item').forEach(el => {
+        el.classList.remove('sync-glow');
+      });
+      
+      if (assetId) {
+        document.querySelectorAll(`.asset-card[data-asset="${assetId}"], .tree-item.asset-item[data-asset="${assetId}"]`).forEach(el => {
+          el.classList.add('sync-glow');
+        });
+      }
+
+      // Highlight Chart.js tooltips/active elements (using the charts map)
+      const assetKeys = ['mfar', 'spic', 'itpg', 'weikfield', 'vistas'];
+      const assetIndex = assetId ? assetKeys.indexOf(assetId) : -1;
+      
+      Object.values(charts).forEach(ch => {
+        if (!ch) return;
+        if (assetIndex !== -1 && ch.data.datasets.length > 0 && ch.data.datasets[0].data.length === 5) {
+          // It's a portfolio chart with 5 assets
+          ch.setActiveElements([{ datasetIndex: 0, index: assetIndex }]);
+          if (ch.tooltip) {
+            ch.tooltip.setActiveElements([{ datasetIndex: 0, index: assetIndex }], { x: 0, y: 0 });
+          }
+        } else {
+          ch.setActiveElements([]);
+          if (ch.tooltip) {
+            ch.tooltip.setActiveElements([], { x: 0, y: 0 });
+          }
+        }
+        ch.update('none'); // Update without animation for instant sync
+      });
+    }
+  });
+
+  /* ════════════════════════════════════════════════════════════════
+     5. ADAPTIVE MAINTENANCE OPTIMIZER (Knapsack 0/1)
+  ════════════════════════════════════════════════════════════════ */
+  const PENDING_TASKS = [
+    { id: 1, name: "Chiller-2 Condenser Descaling", hours: 8, impact: 35, category: "HVAC" },
+    { id: 2, name: "APFC Panel Capacitor Swap", hours: 4, impact: 20, category: "Electrical" },
+    { id: 3, name: "STP Sludge Pump Overhaul", hours: 6, impact: 25, category: "Plumbing" },
+    { id: 4, name: "Fire Sprinkler Pressure Test", hours: 10, impact: 40, category: "Fire Safety" },
+    { id: 5, name: "Lobby AHU Filter Cleaning", hours: 3, impact: 15, category: "HVAC" }
+  ];
+
+  function runOptimizer() {
+    const maxHours = Math.floor(12 + Math.random() * 11); // random hours between 12 and 22
+    const n = PENDING_TASKS.length;
+    const dp = Array.from({ length: n + 1 }, () => Array(maxHours + 1).fill(0));
+    
+    for (let i = 1; i <= n; i++) {
+      const task = PENDING_TASKS[i - 1];
+      for (let w = 0; w <= maxHours; w++) {
+        if (task.hours <= w) {
+          dp[i][w] = Math.max(dp[i - 1][w], dp[i - 1][w - task.hours] + task.impact);
+        } else {
+          dp[i][w] = dp[i - 1][w];
+        }
+      }
+    }
+    
+    let w = maxHours;
+    const selected = new Set();
+    for (let i = n; i > 0; i--) {
+      if (dp[i][w] !== dp[i - 1][w]) {
+        const task = PENDING_TASKS[i - 1];
+        selected.add(task.id);
+        w -= task.hours;
+      }
+    }
+    
+    const totalImpact = dp[n][maxHours];
+    const totalHours = maxHours - w;
+
+    const budgetLabel = document.getElementById('opt-budget-label');
+    const budgetBar = document.getElementById('opt-budget-bar');
+    const taskList = document.getElementById('opt-task-list');
+    const impactLabel = document.getElementById('opt-total-impact');
+
+    if (budgetLabel) budgetLabel.textContent = `${totalHours} / ${maxHours} hrs limit`;
+    if (budgetBar) {
+      const pct = (totalHours / maxHours) * 100;
+      budgetBar.style.width = `${pct}%`;
+      budgetBar.className = `bar-fill ${pct > 85 ? 'r' : pct > 60 ? 'p' : 'g'}`;
+    }
+    if (impactLabel) impactLabel.textContent = `${totalImpact} / 135 pts`;
+
+    if (taskList) {
+      taskList.innerHTML = PENDING_TASKS.map(t => {
+        const isSel = selected.has(t.id);
+        return `
+          <div class="eq-row" style="padding:6px 10px; font-size:10px; display:flex; justify-content:space-between; align-items:center; border-left:3px solid var(--c-${isSel ? 'success' : 'idle'}); opacity:${isSel ? 1 : 0.6}; background:${isSel ? 'var(--c-success-bg)' : '#F8FAFC'}; transition: all 0.3s ease;">
+            <div class="eq-info" style="display:flex; flex-direction:column; gap:1px;">
+              <span class="eq-name" style="font-weight:600; color:var(--c-txt); font-size:10px;">${t.name}</span>
+              <span class="eq-meta" style="font-size:8px; color:var(--c-txt2);">${t.category} · ${t.hours} hrs · Value: ${t.impact}</span>
+            </div>
+            <span class="badge ${isSel ? 'ok' : 'idle'}" style="font-size:8px; padding:1px 5px;">${isSel ? 'Selected' : 'Deferred'}</span>
+          </div>
+        `;
+      }).join('');
+    }
+  }
+
+  runOptimizer();
+  setInterval(runOptimizer, 5000);
+
+  /* ════════════════════════════════════════════════════════════════
+     CCTV CAMERA SURVEILLANCE
+  ════════════════════════════════════════════════════════════════ */
+  window.initBMSCCTV = function() {
+    for(let i=1; i<=4; i++) {
+      const canvas = document.getElementById(`cctv-canvas-${i}`);
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          canvas.width = canvas.clientWidth || 320;
+          canvas.height = canvas.clientHeight || 180;
+          ctx.fillStyle = '#020617';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Draw static text to show signal status
+          ctx.fillStyle = 'rgba(74, 222, 128, 0.4)';
+          ctx.font = '10px monospace';
+          ctx.fillText(`CAM-0${i} // SIGNAL OK`, 15, 25);
+        }
+      }
+    }
+  };
+
+  window.expandCCTV = function(idx) {
+    const names = [
+      'Lobby East Entrance (CCTV-01)',
+      'Perimeter Fence West (CCTV-02)',
+      'Server Room Rack B (CCTV-03)',
+      'Loading Dock Access (CCTV-04)'
+    ];
+    const bodyHTML = `
+      <div style="background:#020617; width:100%; height:420px; border-radius: 4px; border:1px solid #1e293b; overflow:hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(74,222,128,0.5); font-family: monospace; font-size: 13px; gap: 8px;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-bottom:4px; opacity: 0.7;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <div>[ CAMERA 0${idx} FEED ON STANDBY ]</div>
+        <div style="font-size:10px; color:rgba(255,255,255,0.3);">NO LIVE STREAM TO DISPLAY</div>
+      </div>
+    `;
+    openModal(names[idx - 1], 'Live CCTV Expanded Stream', bodyHTML);
+  };
+});
+
+/* ── Focus mode section init from URL param ── */
+(function(){
+  const urlParams = new URLSearchParams(window.location.search);
+  const secId = urlParams.get('sec');
+  if (secId && urlParams.get('focus')) {
+    // Will be used on DOMContentLoaded above to show correct section
+    document.addEventListener('DOMContentLoaded', () => {
+      if (document.getElementById(secId)) {
+        showSection(secId);
+      }
+    });
+  }
+})();
+</script>
+</body>
+</html>
